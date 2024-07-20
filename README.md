@@ -3,8 +3,8 @@ emacs.el and other useful files for myself (and others)
 
 # todo
 - new to fully customize color theme, some of it is still messy
-  - also the color theme when you're navigating files and stuff looks
-    so ugly
+  - ~also the color theme when you're navigating files and stuff looks
+    so ugly~ mostly done, need to fix a few parts of Helm
 - rest of Prof.Fleurets stuff as you see fit
 - add the nice new useful functions and keybinds to emacs notes
 - latex-mode
@@ -17,6 +17,7 @@ emacs.el and other useful files for myself (and others)
 - his other files (selector.el!!)
 - include other useful custom scripts and other little tidbits
   - kitty.conf, etc
+    - needs further customization, but good start
 - organization of repository
 - images for reference (themes)
 

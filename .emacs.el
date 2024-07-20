@@ -96,17 +96,22 @@
 
 (elpy-enable)
 (custom-set-variables
- ;;  ;; custom-set-variables was added by Custom.
- ;;  ;; If you edit it by hand, you could mess it up, so be careful.
- ;;  ;; Your init file should contain only one such instance.
- ;;  ;; If there is more than one, they won't work right.
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
  '(package-selected-packages '(elpy pdf-tools auctex)))
 (custom-set-faces
- ;;  ;; custom-set-faces was added by Custom.
- ;;  ;; If you edit it by hand, you could mess it up, so be careful.
- ;;  ;; Your init file should contain only one such instance.
- ;;  ;; If there is more than one, they won't work right.
- )
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(header-line ((t (:inherit mode-line :background "plum" :foreground "black" :inverse-video nil :box nil))))
+ '(helm-candidate-number ((t (:extend t :background "light coral" :foreground "black"))))
+ '(helm-header ((t (:extend t :background "peach puff" :foreground "black"))))
+ '(helm-selection ((t (:extend t :background "cornsilk" :distant-foreground "black"))))
+ '(helm-selection-line ((t (:inherit highlight :extend t :distant-foreground "black"))))
+ '(helm-source-header ((t (:extend t :background "blanched almond" :foreground "black" :weight normal :height 1.0 :family "Mono Regular")))))
 
 ;; ;; Following this wonderful guide: https://emacs-lsp.github.io/lsp-mode/tutorials/CPP-guide/
 ;; ;; We have support C++ stuff, need to do some review to take full advantage!

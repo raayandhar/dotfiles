@@ -20,6 +20,9 @@ emacs.el and other useful files for myself (and others)
     - needs further customization, but good start
 - organization of repository
 - images for reference (themes)
+- fix the weird green that classes have
+- fix the colors on kitty, still looks weird
+
 
 # note:
 - most of this comes from [Prof. Francois Fleuret](https://fleuret.org/cgi-bin/gitweb/gitweb.cgi?p=elisp.git;a=tree)

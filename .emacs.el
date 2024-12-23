@@ -100,7 +100,8 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages '(elpy pdf-tools auctex)))
+ '(package-selected-packages
+   '(cmake-font-lock dune merlin tuareg anaconda-mode blacken markdownfmt flymake-markdownlint markdown-preview-mode elpy pdf-tools auctex)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -715,3 +716,124 @@ goback argument, go back where we were."
  '(tex-suscript-height-ratio 1.0)
 ;; Looks like one of them worked
 
+;; Some org-mode mathjax nonsense
+(setq org-html-with-latex 'dvipng)  ;; For inline LaTeX math
+(setq org-html-with-latex 'mathjax) ;; For MathJax (HTML+MathJax)
+(setq org-html-mathjax-options
+      '((path "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js")
+        (scale "1")
+        (align "center")
+        (indent "2em")
+        (tags "ams")
+        (locales "en")
+        (fast-preview "false")))
+;; Now if we use $$ $$ or \( \) or \[ ]\ for inline math. At some point you should set it up so that when you starting typing $$, the other $$ appears on the other side.
+
+;; Now some code syntax highlighting nonsense
+(setq org-html-htmlize-output-type 'css) ;; Export with CSS for syntax highlighting
+(setq org-html-htmlize-font-prefix "org-") ;; Avoid CSS clashes with other styles
+;; Use = for inline code snippets and #+BEGIN_SRC lang and #+END_SRC for code blocks.
+
+;; Move backups to backup
+(setq backup-directory-alist `(("." . "~/backups")))
+
+;; Markdown
+(use-package markdown-mode
+  :ensure t
+  :commands (markdown-mode gfm-mode)
+  :mode (("README\\.md\\'" . gfm-mode)
+         ("\\.md\\'" . markdown-mode)
+         ("\\.markdown\\'" . markdown-mode))
+  :init (setq markdown-command "multimarkdown"))
+
+;; Use black as the default formatter for Python
+(use-package blacken
+  :ensure t
+  :hook (python-mode . blacken-mode))
+
+;; Anaconda mode
+(add-hook 'python-mode-hook 'anaconda-mode)
+
+(push "~/.opam/default/share/emacs/site-lisp" load-path) ; directory containing merlin.el
+(setq merlin-command "~/.opam/default/bin/ocamlmerlin")  ; path to ocamlmerlin
+(autoload 'merlin-mode "merlin" "Merlin mode" t)
+(add-hook 'tuareg-mode-hook #'merlin-mode)
+(add-hook 'caml-mode-hook #'merlin-mode)
+
+;; Uncomment these lines if you want to enable integration with the corresponding packages
+;; (require 'merlin-iedit)       ; iedit.el editing of occurrences
+;; (require 'merlin-company)     ; company.el completion
+;; (require 'merlin-ac)          ; auto-complete.el completion
+;; To easily change opam switches and pick the ocamlmerlin binary accordingly,
+;; you can use the minor mode https://github.com/ProofGeneral/opam-switch-mode
+
+
+;; Add custom lisp directory to load-path
+(add-to-list 'load-path "~/.emacs.d/lisp/")
+
+;; Load cuda-mode
+(require 'cuda-mode)
+
+;; Configure cuda-mode
+(add-to-list 'auto-mode-alist '("\\.cu\\'" . cuda-mode))
+(add-to-list 'auto-mode-alist '("\\.cuh\\'" . cuda-mode))
+
+(add-hook 'cuda-mode-hook
+          (lambda ()
+            ;; Set indentation level for CUDA code
+            (setq c-basic-offset 4)
+            ;; Set Flycheck include paths if needed
+            (setq flycheck-cuda-include-path (list "."))
+            ;; Enable syntax checking with Flycheck
+            (flycheck-mode)))
+
+;; Enable Flycheck globally
+(add-hook 'after-init-hook #'global-flycheck-mode)
+
+;; Optional: Use irony-mode with cuda-mode
+(use-package irony
+  :ensure t
+  :hook
+  ((cuda-mode c-mode c++-mode) . irony-mode)
+  (irony-mode . irony-cdb-autosetup-compile-options))
+
+;; Optional: Additional CMake support
+(use-package cmake-font-lock
+  :ensure t
+  :hook
+  (cmake-mode . cmake-font-lock-activate))
+
+;; Ensure 'compat' is installed
+(use-package compat
+  :ensure t)
+
+;; Ensure cuda-mode is supported by irony-mode
+(with-eval-after-load 'irony
+  (add-to-list 'irony-supported-major-modes 'cuda-mode))
+
+;; Set compile command for CUDA files
+(add-hook 'cuda-mode-hook
+          (lambda ()
+            (setq compile-command
+                  (concat "nvcc -o "
+                          (file-name-sans-extension buffer-file-name)
+                          " " buffer-file-name))))
+
+;; Function to compile and run CUDA binaries
+(defun cuda-vrm ()
+  "Compile the current CUDA file with nvcc and run the output binary if successful."
+  (interactive)
+  (let* ((filename (file-name-nondirectory buffer-file-name))
+         (basename (file-name-sans-extension filename))
+         (output (concat (file-name-directory buffer-file-name) basename)))
+    ;; Set the compile command to nvcc
+    (setq compile-command
+          (format "nvcc -o %s %s && %s"
+                  output
+                  buffer-file-name
+                  output))
+    ;; Call compile
+    (compile compile-command)))
+
+;; Bind to a key (optional)
+(global-set-key (kbd "C-c C-r") 'cuda-vrm)

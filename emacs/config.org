@@ -1,0 +1,376 @@
+#+TITLE: My Emacs Configuration
+#+AUTHOR: Raayan Dhar
+#+STARTUP: showeverything
+#+OPTIONS: toc:nil
+
+* Package Management
+#+begin_src emacs-lisp
+(require 'package)
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+(require 'use-package)
+(setq use-package-always-ensure t)
+#+end_src
+
+* Appearance and Theme
+#+begin_src emacs-lisp
+;; Load your custom theme from the themes folder.
+(add-to-list 'custom-theme-load-path (expand-file-name "themes" user-emacs-directory))
+(load-theme 'custom-dark t)
+
+;; Disable menu, toolbar, and scrollbars for a minimal UI.
+(menu-bar-mode -1)
+(tool-bar-mode -1)
+(scroll-bar-mode -1)
+
+;; Set the default font size.
+(set-face-attribute 'default nil :height 140)
+;; Global absolute line numbers:
+(global-display-line-numbers-mode 1)
+(setq display-line-numbers-type t)  ;; Use absolute numbers, not relative.
+(column-number-mode 1)
+
+;; Set transparency (alpha 95% opaque).
+(set-frame-parameter (selected-frame) 'alpha '(95 . 95))
+(add-to-list 'default-frame-alist '(alpha . (95 . 95)))
+#+end_src
+
+* Helm Completion
+#+begin_src emacs-lisp
+(use-package helm
+  :init
+  (helm-mode 1)
+  :config
+  (setq helm-display-header-line nil
+        helm-autoresize-max-height 30
+        helm-autoresize-min-height 10)
+  (helm-autoresize-mode 1))
+;; Remap common commands to Helm versions.
+(global-set-key [remap find-file] #'helm-find-files)
+(global-set-key [remap execute-extended-command] #'helm-M-x)
+(global-set-key [remap switch-to-buffer] #'helm-mini)
+#+end_src
+
+* Org Mode Enhancements
+#+begin_src emacs-lisp
+(setq org-startup-indented t
+      org-return-follows-link t)
+
+(use-package org-bullets
+  :hook (org-mode . org-bullets-mode))
+
+(use-package toc-org
+  :commands toc-org-enable
+  :init (add-hook 'org-mode-hook 'toc-org-enable))
+
+(require 'org-tempo)
+
+;; Enhanced Org-mode settings for math and images.
+(setq org-html-with-latex 'mathjax)
+(setq org-html-mathjax-options
+      '((path "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js")
+        (scale "1")
+        (align "center")
+        (indent "2em")
+        (tags "ams")
+        (locales "en")
+        (fast-preview "false")))
+(setq org-image-actual-width nil)
+;; Enable live preview of LaTeX fragments.
+(use-package org-fragtog
+  :hook (org-mode . org-fragtog-mode))
+#+end_src
+
+* LaTeX Editing (AUCTeX + PDF Tools)
+#+begin_src emacs-lisp
+(use-package auctex)
+(setq TeX-auto-save t
+      TeX-parse-self t
+      TeX-command-default "LatexMk"
+      LaTeX-command "latex -shell-escape")
+
+;; Disable special fontification of scripts (superscripts/subscripts) so they match main text.
+(setq font-latex-fontify-script nil)
+
+(use-package pdf-tools
+  :config
+  (pdf-tools-install))
+
+(setq TeX-view-program-selection '((output-pdf "PDF Tools"))
+      TeX-source-correlate-start-server t)
+(setq TeX-view-program-list '(("PDF Tools" TeX-pdf-tools-sync-view)))
+(add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)
+(add-hook 'TeX-mode-hook (lambda () (define-key TeX-mode-map (kbd "RET") 'TeX-view)))
+(add-hook 'doc-view-mode-hook 'auto-revert-mode)
+(add-hook 'pdf-view-mode-hook (lambda () (display-line-numbers-mode -1)))
+#+end_src
+
+* Python Development
+#+begin_src emacs-lisp
+(use-package elpy
+  :init (elpy-enable))
+(setq python-shell-interpreter "ipython3"
+      python-shell-interpreter-args "--simple-prompt -i")
+
+(use-package lsp-mode
+  :hook (python-mode . lsp-deferred)
+  :commands lsp)
+  
+;; Disable ruff plugin in pylsp so it doesn't run on every keystroke.
+(setq lsp-pylsp-plugins.ruff.enabled nil)
+
+(use-package company
+  :hook (prog-mode . company-mode)
+  :custom
+  (company-minimum-prefix-length 1)
+  (company-idle-delay 0.0))
+
+(use-package flycheck
+  :init (global-flycheck-mode))
+
+;; Run Ruff on save silently, fixing issues and then refreshing the buffer.
+(defun my-run-ruff-on-save ()
+  "Run Ruff with --fix on the current Python file when saving.
+Output is redirected, and the buffer is reverted to reflect changes."
+  (when (and (eq major-mode 'python-mode)
+             (buffer-file-name))
+    (shell-command
+     (format "ruff check --fix %s > /dev/null 2>&1" (shell-quote-argument (buffer-file-name))))
+    (revert-buffer t t t)))
+(add-hook 'before-save-hook 'my-run-ruff-on-save)
+#+end_src
+
+* Sane Defaults
+#+begin_src emacs-lisp
+(delete-selection-mode 1)
+(global-auto-revert-mode 1)
+(electric-pair-mode 1)
+(setq auto-save-list-file-prefix nil)
+(setq transient-mark-mode t)
+(setq mouse-highlight nil)
+(setq enable-local-eval t)
+;; Disable backup (tilde) files.
+(setq make-backup-files nil)
+(setq auto-save-default nil)
+;; Always use y or n instead of full "yes" or "no".
+(defalias 'yes-or-no-p 'y-or-n-p)
+#+end_src
+
+* Recent Files
+#+begin_src emacs-lisp
+;; Enable recentf-mode so recent files appear.
+(use-package recentf
+  :init
+  (recentf-mode 1)
+  (setq recentf-max-menu-items 25))
+#+end_src
+
+* Dashboard
+#+begin_src emacs-lisp
+(use-package dashboard
+  :init
+  (setq initial-buffer-choice 'dashboard-open
+        dashboard-center-content t
+        ;; Set the banner image to old.png.
+        dashboard-startup-banner (expand-file-name "img/old.png" user-emacs-directory)
+        ;; Set banner text below the image.
+        dashboard-banner-logo-title "LeBron"
+        ;; Disable icons.
+        dashboard-set-heading-icons nil
+        dashboard-set-file-icons nil
+        ;; Exclude tilde files from recentf.
+        dashboard-recentf-exclude '(".*~$")
+        ;; Display recent files, bookmarks, and registers.
+        dashboard-items '((recents . 5)
+                          (bookmarks . 3)
+                          (registers . 3))
+        ;; Set custom footer messages.
+        dashboard-footer-messages '("DN"))
+  :config
+  (dashboard-setup-startup-hook))
+#+end_src
+
+* Doom Modeline (No Icons)
+#+begin_src emacs-lisp
+(use-package doom-modeline
+  :init
+  (doom-modeline-mode 1)
+  :custom
+  (doom-modeline-height 15)
+  ;; Disable icons.
+  (doom-modeline-icon nil)
+  (doom-modeline-buffer-state-icon nil)
+  (doom-modeline-buffer-modification-icon nil))
+#+end_src
+
+* Tramp Setup
+#+begin_src emacs-lisp
+;; Configure Tramp to use SSH and lower verbosity.
+(setq tramp-default-method "ssh")
+(setq tramp-verbose 1)
+#+end_src
+
+* C++ Development
+#+begin_src emacs-lisp
+;; --- C++ Development Setup ---
+
+;; 1. LSP Setup for C/C++ using clangd:
+(use-package lsp-mode
+  :hook ((c-mode c++-mode) . lsp-deferred)  ; Start LSP in C/C++ modes automatically.
+  :commands lsp
+  :custom
+  (lsp-idle-delay 0.5)                      ; Wait 0.5 seconds of inactivity.
+  (lsp-clients-clangd-executable "clangd")) ; Ensure clangd is installed and in PATH.
+
+;; 2. Enhanced Syntax Highlighting:
+;; Use modern-c++-font-lock for better highlighting of modern C++ constructs.
+(use-package modern-cpp-font-lock
+  :hook (c++-mode . modern-c++-font-lock-mode) ; Use the correct function name.
+  :config
+  (modern-c++-font-lock-mode 1))
+
+;; 3. Helm-xref for Code Navigation:
+;; Provides a Helm-based interface to find definitions/references.
+(use-package helm-xref
+  :after helm
+  :config
+  (setq xref-show-xrefs-function #'helm-xref-show-xrefs))
+
+;; 4. Snippet Support:
+;; Enable yasnippet and load a collection of C++ snippets.
+(use-package yasnippet
+  :init
+  (yas-global-mode 1))
+(use-package yasnippet-snippets
+  :after yasnippet)
+
+;; 5. Project Management:
+;; Use Projectile for project navigation and management.
+(use-package projectile
+  :init
+  (projectile-mode +1)
+  :custom
+  (projectile-completion-system 'ivy)
+  :config
+  ;; Set the directory/directories where your C++ projects reside.
+  (setq projectile-project-search-path '("~/cpp_projects"))
+  (setq projectile-switch-project-action #'projectile-dired))
+
+;; Integrate Projectile with Ivy for smooth file navigation.
+(use-package counsel-projectile
+  :after projectile
+  :config
+  (counsel-projectile-mode 1))
+
+;; 6. Which-Key for Keybinding Hints:
+(use-package which-key
+  :init (which-key-mode 1)
+  :config
+  (setq which-key-idle-delay 0.5))
+
+;; 7. Buffer-Move for Swapping Buffers Between Windows:
+(use-package buffer-move
+  :ensure t
+  :commands (buf-move-up buf-move-down buf-move-left buf-move-right)
+  :config
+  (setq buffer-move-behavior 'swap))
+#+end_src
+
+* CUDA Integration
+#+begin_src emacs-lisp
+;; --- CUDA Mode Integration ---
+
+;; Load the separate cuda-mode.el file.
+;; Adjust the file path if necessary.
+(load (expand-file-name "~/.emacs.d/lisp/cuda-mode.el") t)
+
+;; Autoload CUDA mode for .cu and .cuh files.
+(add-to-list 'auto-mode-alist '("\\.cu\\'" . cuda-mode))
+(add-to-list 'auto-mode-alist '("\\.cuh\\'" . cuda-mode))
+
+;; Add a hook for CUDA-specific customizations.
+(defun my-cuda-mode-setup ()
+  "Additional customizations for CUDA mode."
+  (setq c-basic-offset 4)  ; Set preferred indentation.
+  (flycheck-mode 1))       ; Enable on-the-fly syntax checking.
+(add-hook 'cuda-mode-hook 'my-cuda-mode-setup)
+#+end_src
+
+* Interactive Run Commands
+#+begin_src emacs-lisp
+;; Function to compile and run the current C++ file.
+(defun run-cpp-17 ()
+  "Compile and run the current C++ file.
+Uses clang++ with -std=c++17 and -O2 optimization.
+The executable is created in the same directory with the same base name."
+  (interactive)
+  (let* ((file (buffer-file-name))
+         (exe (concat (file-name-sans-extension file))))
+    (if file
+        (compile (format "clang++ -std=c++17 -O2 %s -o %s && %s"
+                         (shell-quote-argument file)
+                         (shell-quote-argument exe)
+                         (shell-quote-argument exe)))
+      (message "Buffer is not visiting a file."))))
+
+;; Function to run the current Python file using python3.
+(defun run-python-file ()
+  "Run the current Python file using python3."
+  (interactive)
+  (let ((file (buffer-file-name)))
+    (if file
+        (compile (format "python3 %s" (shell-quote-argument file)))
+      (message "Buffer is not visiting a file."))))
+
+;; Function to compile CUDA files and run the resulting executable.
+(defun run-cuda-files (&optional files)
+  "Compile CUDA source files using nvcc and run the executable if compilation succeeds.
+If FILES is not provided, default to the current buffer's file.
+The executable is created with the same base name and an '.out' extension."
+  (interactive)
+  (let* ((file-list (if files files (list (buffer-file-name))))
+         (first-file (car file-list))
+         (exe (concat (file-name-sans-extension first-file) ".out"))
+         (cmd (mapconcat 'shell-quote-argument file-list " "))
+         (full-cmd (format "nvcc -arch=sm_50 -O2 %s -o %s && %s"
+                           cmd
+                           (shell-quote-argument exe)
+                           (shell-quote-argument exe))))
+    (if first-file
+        (compile full-cmd)
+      (message "No CUDA file available in buffer."))))
+#+end_src
+
+* Key Bindings
+#+begin_src emacs-lisp
+(global-set-key (kbd "C-x C-b") 'ibuffer)
+;; If you want to pick a helm theme:
+;; (global-set-key (kbd "C-c t") 'helm-colors)
+(global-set-key (kbd "C-c r") (lambda () (interactive) (load-file user-init-file)))
+;; Zoom in/out commands.
+(global-set-key (kbd "C-=") 'text-scale-increase)
+(global-set-key (kbd "C--") 'text-scale-decrease)
+(global-set-key (kbd "<C-wheel-up>") 'text-scale-increase)
+(global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
+;; Single ESC to quit the minibuffer.
+(global-set-key [escape] 'keyboard-escape-quit)
+#+end_src
+
+* Future Modules
+#+begin_src emacs-lisp
+;; Command to recursively delete all files ending with a tilde in the current directory.
+(defun delete-tilde-files ()
+  "Delete all files ending with a tilde in the current directory recursively."
+  (interactive)
+  (shell-command "find . -type f -name '*~' -delete"))
+
+;; Command to recursively delete all files ending with a tilde from the root directory.
+(defun delete-tilde-files-root ()
+  "Delete all files ending with a tilde from the root directory recursively.
+WARNING: This will delete backup files from the entire filesystem. Use with caution."
+  (interactive)
+  (shell-command "sudo find / -type f -name '*~' -delete"))
+#+end_src

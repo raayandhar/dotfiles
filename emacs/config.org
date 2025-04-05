@@ -121,7 +121,9 @@
   
 ;; Disable ruff plugin in pylsp so it doesn't run on every keystroke.
 (setq lsp-pylsp-plugins.ruff.enabled nil)
-
+(use-package pet
+  :config
+  (add-hook 'python-base-mode-hook 'pet-mode -10))
 (use-package company
   :hook (prog-mode . company-mode)
   :custom
@@ -140,7 +142,8 @@ Output is redirected, and the buffer is reverted to reflect changes."
     (shell-command
      (format "ruff check --fix %s > /dev/null 2>&1" (shell-quote-argument (buffer-file-name))))
     (revert-buffer t t t)))
-(add-hook 'before-save-hook 'my-run-ruff-on-save)
+;; bad
+;; (add-hook 'before-save-hook 'my-run-ruff-on-save)
 #+end_src
 
 * Sane Defaults
@@ -357,6 +360,22 @@ The executable is created with the same base name and an '.out' extension."
 (global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
 ;; Single ESC to quit the minibuffer.
 (global-set-key [escape] 'keyboard-escape-quit)
+#+end_src
+
+* Copilot Setup
+
+#+begin_src emacs-lisp
+(use-package copilot
+  :ensure t
+  :config
+  ;; Enable copilot only in programming modes.
+  (add-hook 'prog-mode-hook 'copilot-mode))
+#+end_src
+#+begin_src emacs-lisp
+;; Copilot shortcuts under the "C-c p" prefix.
+(global-set-key (kbd "C-c p c") 'copilot-complete)
+(global-set-key (kbd "C-c p a") 'copilot-accept-completion)
+(global-set-key (kbd "C-c p o") 'copilot-clear-overlay)
 #+end_src
 
 * Future Modules

@@ -282,6 +282,35 @@ Output is redirected, and the buffer is reverted to reflect changes."
   (setq buffer-move-behavior 'swap))
 #+end_src
 
+* Java Development
+
+#+begin_src emacs-lisp
+;; --- Java Development Setup ---
+;; Use lsp-java for enhanced Java support. This sets up LSP for Java and enables features
+;; such as code completion, error checking, and formatting.
+
+(use-package lsp-java
+  :ensure t
+  :hook (java-mode . lsp-deferred)
+  :config
+  (setq lsp-java-save-action-organize-imports t
+        ;; Optionally, you can set up a formatting style. For example, the Google Java Style:
+        lsp-java-format-settings-url "https://raw.githubusercontent.com/google/styleguide/gh-pages/eclipse-java-google-style.xml"
+        lsp-java-format-settings-profile "GoogleStyle"))
+
+;; A simple command to compile and run the current Java file.
+(defun run-java-file ()
+  "Compile and run the current Java file.
+Assumes the file contains a public class with a main method."
+  (interactive)
+  (let* ((file (buffer-file-name))
+         (class (file-name-base file)))
+    (if file
+        (compile (format "javac %s && java %s"
+                         (shell-quote-argument file)
+                         (shell-quote-argument class)))
+      (message "Buffer is not visiting a file."))))
+#+end_src
 * CUDA Integration
 #+begin_src emacs-lisp
 ;; --- CUDA Mode Integration ---

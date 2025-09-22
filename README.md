@@ -85,7 +85,7 @@ uv
 - `C-c C-<` mark all like this
 ### quickrun
 - `C-c r` run current file in buffer's languages
-### dump-jump
+### dumb-jump
 - `M-g j` go
 - `M-g b` back
 - `M-g q` quick look

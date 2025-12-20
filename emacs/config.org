@@ -418,18 +418,17 @@
 (use-package git-timemachine
   :bind (("C-x t" . git-timemachine)))
 
-;; Git Gutter: show diff markers in the fringe
-(use-package git-gutter
-  :hook (prog-mode . git-gutter-mode)
-  :custom
-  (git-gutter:modified-sign "~")  ;; modified
-  (git-gutter:added-sign    "+")  ;; added
-  (git-gutter:deleted-sign  "-")  ;; deleted
-  (git-gutter:ask-p nil)          ;; don’t prompt before revert
+;; Diff-hl: Git change markers (works locally + over SSH/TRAMP)
+(use-package diff-hl
+  :hook ((prog-mode  . diff-hl-mode)
+         (org-mode   . diff-hl-mode)
+         (dired-mode . diff-hl-dired-mode)
+         (after-init . global-diff-hl-mode))
   :config
-  (set-face-foreground 'git-gutter:modified "orange")
-  (set-face-foreground 'git-gutter:added    "green")
-  (set-face-foreground 'git-gutter:deleted  "red"))
+  (diff-hl-flydiff-mode 1)
+
+  ;; Make sure it updates correctly over SSH / TRAMP
+  (add-hook 'tramp-post-connection-hook #'diff-hl-update))
 
 ;; Doom modeline already shows branch and VCS info.
 (use-package doom-modeline
@@ -647,6 +646,8 @@ The executable is created with the same base name and an '.out' extension."
 (global-set-key (kbd "C-x C-b") 'ibuffer)
 (global-set-key (kbd "C-c r") (lambda () (interactive) (load-file user-init-file)))
 ;; Zoom in/out commands.
+(global-set-key (kbd "C-=") 'text-scale-increase)
+(global-set-key (kbd "C--") 'text-scale-decrease)
 (global-set-key (kbd "<C-wheel-up>") 'text-scale-increase)
 (global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
 ;; Single ESC to quit the minibuffer.

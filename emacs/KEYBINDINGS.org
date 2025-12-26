@@ -1,0 +1,514 @@
+#+TITLE: Emacs Configuration Reference
+#+AUTHOR: RD
+#+STARTUP: overview
+#+OPTIONS: toc:3
+
+* Package Management
+
+** straight.el
+- Manages packages by cloning git repositories directly
+- Provides reproducible builds and version pinning
+- Integrated with use-package
+
+** Installation
+- Packages are auto-installed on first Emacs startup
+- Or when you reload config with new packages
+
+** Manual package installation
+: M-x straight-use-package RET package-name RET
+
+* Tree-sitter
+
+** What it provides
+- Fast, accurate syntax highlighting using proper parsers
+- Better code structure understanding than regex-based modes
+
+** Supported languages
+- Python (python-ts-mode)
+- C (c-ts-mode)
+- C++ (c++-ts-mode)
+- CUDA (cuda-ts-mode)
+
+** Installing grammars
+: M-x install-treesit-grammars
+
+** File associations
+| Extension    | Mode           |
+|--------------+----------------|
+| .py          | python-ts-mode |
+| .c, .h       | c-ts-mode      |
+| .cpp, .hpp   | c++-ts-mode    |
+| .cu, .cuh    | cuda-ts-mode   |
+
+* Completion System
+
+** Vertico
+- Vertical completion UI in minibuffer
+- Auto-enabled globally
+
+** Navigation in minibuffer
+| Key     | Action                    |
+|---------+---------------------------|
+| C-n     | Next completion           |
+| C-p     | Previous completion       |
+| RET     | Select completion         |
+| C-g     | Cancel                    |
+
+** Consult Commands
+| Key       | Command                | Description                     |
+|-----------+------------------------+---------------------------------|
+| C-x b     | consult-buffer         | Switch buffer (enhanced)        |
+| M-y       | consult-yank-pop       | Browse kill ring                |
+| C-x C-r   | consult-recent-file    | Open recent file                |
+| C-c f     | consult-find           | Find files                      |
+
+** Marginalia
+- Adds helpful annotations to minibuffer completions
+- Shows file sizes, command descriptions, etc.
+- Auto-enabled
+
+** Embark
+| Key     | Command              | Description                        |
+|---------+----------------------+------------------------------------|
+| C-.     | embark-act           | Perform action on thing at point   |
+| C-;     | embark-dwim          | Smart default action               |
+| C-h B   | embark-bindings      | Show all available keybindings     |
+
+* Recent Files
+
+** How it works
+- Automatically tracks last 100 files you open
+- Persists across Emacs sessions
+- Shows up to 25 files in completion list
+
+** Access recent files
+: C-x C-r (consult-recent-file)
+
+* Appearance & Theme
+
+** Custom dark theme
+- Location: ~/.emacs.d/themes/custom-dark-theme.el
+- Muted monochrome syntax highlighting
+- Grays and whites for minimal distraction
+
+** Color scheme
+- Background: #1c1c1c (very dark gray)
+- Foreground: #dddddd (light gray)
+- Comments: #888888 (medium gray, italic)
+- Keywords: #cccccc (light gray)
+- Functions: #ffffff (white, brightest)
+
+** diff-hl colors (git indicators)
+- Green (#50a050): Added lines
+- Blue (#5080b0): Modified lines
+- Red (#d05050): Deleted lines
+
+** UI settings
+- No menu bar, toolbar, or scrollbars
+- Line numbers enabled globally
+- 95% window transparency
+- 10pt font (height 100)
+
+* TRAMP (SSH Support)
+
+** Editing remote files
+: C-x C-f /ssh:user@host:/path/to/file
+
+** Examples
+: /ssh:raayan@server.com:/home/raayan/code/main.py
+: /ssh:root@192.168.1.100:/etc/nginx/nginx.conf
+
+** What works over SSH
+- File editing (obviously)
+- Magit (git operations on remote!)
+- LSP (may be slower)
+- Directory browsing (dired)
+- Most text editing features
+
+** What doesn't work over SSH
+- vterm (local terminal only)
+
+* Git Integration
+
+** Magit - Git Interface
+| Key     | Command                | Description                     |
+|---------+------------------------+---------------------------------|
+| C-x g   | magit-status           | Open git status buffer          |
+
+** In Magit status buffer
+| Key     | Action                           |
+|---------|----------------------------------|
+| s       | Stage file/hunk                  |
+| u       | Unstage file/hunk                |
+| c c     | Commit                           |
+| P p     | Push to remote                   |
+| F p     | Pull from remote                 |
+| b b     | Switch branch                    |
+| b c     | Create new branch                |
+| l l     | View log                         |
+| d d     | Diff                             |
+| TAB     | Expand/collapse section          |
+| g       | Refresh status                   |
+| q       | Quit magit buffer                |
+
+** diff-hl
+- Shows git changes in left margin/fringe
+- Green bar: Added lines
+- Blue bar: Modified lines
+- Red bar: Deleted lines
+- Auto-enabled in prog-mode, org-mode, dired
+- Works over SSH/TRAMP
+
+* Project Management
+
+** Projectile
+- Automatically detects git repos as projects
+- Uses Vertico for completion
+
+** Projectile commands (C-c p prefix)
+| Key       | Command                        | Description                    |
+|-----------+--------------------------------+--------------------------------|
+| C-c p f   | projectile-find-file           | Find file in project           |
+| C-c p p   | projectile-switch-project      | Switch to another project      |
+| C-c p s g | projectile-grep                | Grep in project                |
+| C-c p r   | projectile-replace             | Replace in project             |
+| C-c p k   | projectile-kill-buffers        | Kill all project buffers       |
+| C-c p d   | projectile-find-dir            | Find directory in project      |
+| C-c p !   | projectile-run-shell-command   | Run shell command in root      |
+
+** Treemacs - File Tree Sidebar
+| Key     | Command                | Description                     |
+|---------+------------------------+---------------------------------|
+| C-c t   | treemacs               | Toggle file tree sidebar        |
+
+** In Treemacs buffer
+| Key     | Action                           |
+|---------|----------------------------------|
+| n       | Next line                        |
+| p       | Previous line                    |
+| RET     | Open file or expand/collapse     |
+| TAB     | Expand/collapse folder           |
+| o       | Open file but stay in treemacs   |
+| q       | Close treemacs                   |
+| r       | Refresh                          |
+| W       | Set width                        |
+
+** Treemacs features
+- Auto-follows current file
+- Shows git status in tree
+- Integrates with Projectile (shows project structure)
+- Icons disabled (minimal aesthetic)
+
+* UI Enhancements
+
+** which-key
+- Shows available keybindings when you pause
+- Auto-enabled globally
+- Appears after 0.5 seconds
+
+** How to use
+1. Press a prefix key (C-c, C-x, etc.)
+2. Pause for 0.5 seconds
+3. Popup shows all available commands
+
+** doom-modeline
+- Better status line at bottom of window
+- Shows: git branch, project name, line:column, major mode, file state
+
+** What's displayed
+- Git branch (e.g., "main")
+- Git state (modified files, ahead/behind)
+- Project name (from Projectile)
+- File encoding (UTF-8)
+- Major mode (python-ts-mode, etc.)
+- Line:Column position
+- Buffer modified indicator
+
+* Org Mode
+
+** Basic settings
+- Indented content under headings
+- RET follows links
+- org-tempo enabled for quick templates
+
+** org-tempo quick templates
+| Type      | Press TAB | Result                    |
+|-----------+-----------+---------------------------|
+| <s        | TAB       | #+begin_src ... #+end_src |
+| <e        | TAB       | #+begin_example ...       |
+| <q        | TAB       | #+begin_quote ...         |
+| <c        | TAB       | #+begin_center ...        |
+
+** org-bullets
+- Pretty bullets (●, ○, ✸) instead of asterisks
+- Auto-enabled in org-mode
+
+** toc-org
+- Auto-generate table of contents
+- Add :TOC: tag to heading where you want TOC
+
+** org-fragtog
+- Live LaTeX preview in org files
+- Type $E=mc^2$ and see it rendered!
+- Auto-enabled in org-mode
+
+** org-roam - Zettelkasten Note-Taking
+| Key       | Command                        | Description                    |
+|-----------+--------------------------------+--------------------------------|
+| C-c n f   | org-roam-node-find             | Find or create note            |
+| C-c n i   | org-roam-node-insert           | Insert link to note            |
+| C-c n l   | org-roam-buffer-toggle         | Toggle backlinks sidebar       |
+| C-c n d   | org-roam-dailies-goto-today    | Go to today's daily note       |
+| C-c n c   | org-roam-capture               | Capture new note               |
+
+** org-roam workflow
+1. C-c n f → create/find note
+2. Type note title → RET
+3. Write your note
+4. C-x C-s → save
+5. C-c n i → link to other notes
+6. C-c n l → see backlinks
+
+** org-roam-ui
+- Visual graph interface
+- Access with: M-x org-roam-ui-mode
+- Opens in browser
+- Shows connections between notes
+
+** Notes location
+- Stored in: ~/Github/rivendell/
+
+* LaTeX
+
+** AUCTeX features
+- Enhanced LaTeX editing
+- Syntax highlighting
+- Auto-completion
+- Smart indentation
+- Uses latexmk (handles multiple passes automatically)
+
+** Compilation
+| Key       | Command                | Description                     |
+|-----------+------------------------+---------------------------------|
+| C-c C-c   | TeX-command-master     | Compile (choose LatexMk first)  |
+| RET       | TeX-view               | View PDF                        |
+
+** Workflow
+1. Write LaTeX in .tex file
+2. C-c C-c → choose "LatexMk" → RET
+3. RET → PDF opens in split window
+4. Make changes → C-c C-c → PDF auto-refreshes
+5. Click in PDF → jumps to source line!
+
+** pdf-tools features
+- View PDFs inside Emacs
+- SyncTeX: Click in PDF ↔ source
+- Auto-refresh on recompile
+- No line numbers in PDF view
+
+** pdf-tools navigation
+| Key     | Action                    |
+|---------|---------------------------|
+| n       | Next page                 |
+| p       | Previous page             |
+| +       | Zoom in                   |
+| -       | Zoom out                  |
+| 0       | Reset zoom                |
+| g       | Go to page                |
+| o       | Outline/table of contents |
+
+** Requirements
+- latexmk installed (texlive-binextra package)
+
+* Development Tools
+
+** Company - Auto-completion
+- Pop-up completions as you type
+- Shows after 1 character
+- 0.1s delay
+
+** Company keybindings
+| Key     | Action                    |
+|---------|---------------------------|
+| M-n     | Next completion           |
+| M-p     | Previous completion       |
+| RET     | Accept completion         |
+| TAB     | Accept completion         |
+| C-g     | Cancel                    |
+| C-h     | Show documentation        |
+
+** yasnippet - Code Snippets
+- Type abbreviation + TAB to expand
+- 100+ built-in snippets per language
+
+** Common snippets
+| Type      | Language | Expands to              |
+|-----------|----------|-------------------------|
+| for       | Python   | for loop                |
+| if        | Python   | if statement            |
+| def       | Python   | function definition     |
+| class     | Python   | class definition        |
+| for       | C++      | for loop                |
+| if        | C++      | if statement            |
+| struct    | C++      | struct definition       |
+
+** Creating custom snippets
+- Directory: ~/.emacs.d/snippets/
+- Create subdirectories for each mode
+- Example: ~/.emacs.d/snippets/python-ts-mode/
+
+** vterm - Terminal Emulator
+| Key     | Command        | Description             |
+|---------|----------------|-------------------------|
+| C-c v   | vterm          | Open terminal           |
+
+** vterm features
+- Full terminal emulation
+- Colors, cursor movement work correctly
+- Better than M-x shell or eshell
+- 10k lines of scrollback
+- Uses /bin/bash by default
+
+* Python Development
+
+** LSP Mode - Language Server Protocol
+- Real-time error detection (red squiggles)
+- Type checking with Pyright
+- Auto-completion (integrates with Company)
+- Go to definition
+- Find references
+- Hover documentation
+
+** LSP keybindings (C-c l prefix)
+| Key         | Command                    | Description                     |
+|-------------+----------------------------+---------------------------------|
+| C-c l g g   | lsp-find-definition        | Go to definition                |
+| C-c l g r   | lsp-find-references        | Find references                 |
+| C-c l r r   | lsp-rename                 | Rename symbol                   |
+| C-c l a a   | lsp-execute-code-action    | Code actions (import, fix)      |
+| C-c l =     | lsp-format-buffer          | Format buffer                   |
+| C-c l h h   | lsp-describe-thing-at-point| Show documentation              |
+
+** Virtual environment
+- Auto-detects venv/ or .venv/ in project
+- Activates automatically when opening Python files
+- Check *Messages* buffer for "Activated venv:" message
+
+** Pyright type checking
+- Mode: standard (moderate strictness)
+- Can be changed to "basic" or "off" in config
+
+** Ignoring pyright errors
+- Per line: ~# type: ignore~ or ~# pyright: ignore~
+- Specific rule: ~# pyright: ignore[reportGeneralTypeIssues]~
+- Whole file: ~# pyright: basic~ at top
+
+** Requirements
+- pyright: sudo pacman -S pyright
+- Or: npm install -g pyright
+
+* C++/CUDA Development
+
+** LSP with clangd
+- Real-time error detection
+- Auto-completion
+- Go to definition
+- Find references
+- Works for C, C++, and CUDA files
+
+** Same LSP keybindings as Python (C-c l prefix)
+| Key         | Command                    | Description                     |
+|-------------+----------------------------+---------------------------------|
+| C-c l g g   | lsp-find-definition        | Go to definition                |
+| C-c l g r   | lsp-find-references        | Find references                 |
+| C-c l r r   | lsp-rename                 | Rename symbol                   |
+| C-c l a a   | lsp-execute-code-action    | Code actions                    |
+| C-c l h h   | lsp-describe-thing-at-point| Show documentation              |
+
+** clang-format
+| Key       | Command                  | Description                     |
+|-----------+--------------------------+---------------------------------|
+| C-c C-f   | clang-format-buffer      | Format entire buffer            |
+| C-c C-r   | clang-format-region      | Format selected region          |
+
+** clang-format notes
+- NOT auto-formatting on save (to avoid indentation issues)
+- Respects .clang-format file in project if present
+- Use C-c C-f to manually format when needed
+
+** CUDA features
+- CUDA-specific keyword highlighting
+- __global__, __device__, __host__, __shared__, __constant__
+- blockIdx, threadIdx, blockDim, gridDim, __syncthreads
+- LSP treats CUDA as C++ (uses clangd)
+- Spaces (not tabs) for indentation
+
+** Requirements
+- clangd: sudo pacman -S clang
+- clang-format: included with clang package
+
+* Basic Keybindings
+
+** Essential commands
+| Key       | Command                  | Description                     |
+|-----------+--------------------------+---------------------------------|
+| C-c r     | Reload config            | Reload entire Emacs config      |
+| C-x C-b   | ibuffer                  | Better buffer list              |
+| C-=       | text-scale-increase      | Zoom in                         |
+| C--       | text-scale-decrease      | Zoom out                        |
+
+** Default Emacs essentials (reminder)
+| Key       | Command                  | Description                     |
+|-----------+--------------------------+---------------------------------|
+| C-x C-f   | find-file                | Open file                       |
+| C-x C-s   | save-buffer              | Save file                       |
+| C-x C-c   | save-buffers-kill-emacs  | Quit Emacs                      |
+| C-x b     | switch-to-buffer         | Switch buffer                   |
+| C-g       | keyboard-quit            | Cancel command                  |
+| C-/       | undo                     | Undo                            |
+| C-s       | isearch-forward          | Search forward                  |
+| C-r       | isearch-backward         | Search backward                 |
+| M-x       | execute-extended-command | Run command by name             |
+
+** Help commands
+| Key       | Command                  | Description                     |
+|-----------+--------------------------+---------------------------------|
+| C-h k     | describe-key             | What does this key do?          |
+| C-h f     | describe-function        | Describe function               |
+| C-h v     | describe-variable        | Describe variable               |
+| C-h m     | describe-mode            | Describe current mode           |
+| C-h e     | view-echo-area-messages  | View *Messages* buffer          |
+| C-h B     | embark-bindings          | Show all keybindings            |
+
+* Tips & Tricks
+
+** First time setup checklist
+1. Restart Emacs after initial config
+2. Run: M-x install-treesit-grammars
+3. Install system packages:
+   - clangd (for C++/CUDA)
+   - pyright (for Python)
+   - latexmk (for LaTeX)
+4. Create ~/Github/rivendell/ for org-roam notes
+
+** Troubleshooting
+- Config not loading: Check *Messages* buffer (C-h e)
+- Package errors: Try M-x straight-rebuild-all
+- LSP not starting: Check if language server is installed
+- Tree-sitter issues: Re-run M-x install-treesit-grammars
+
+** Performance tips
+- LSP can be slow on large projects
+- Use C-c l s r to restart LSP if it's misbehaving
+- Disable LSP temporarily: M-x lsp-disconnect
+
+** Learning more
+- Press C-h m in any buffer to see mode-specific commands
+- Press C-c and wait 0.5s to see available C-c commands
+- Use which-key to discover keybindings
+- Read package documentation: M-x describe-package RET package-name
+
+** Customization
+- Theme colors: Edit ~/.emacs.d/themes/custom-dark-theme.el
+- Keybindings: Add to KEYBINDINGS section in config.org
+- Per-project settings: Use .dir-locals.el in project root

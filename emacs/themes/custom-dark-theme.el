@@ -7,14 +7,14 @@
       (fg2 "#aaaaaa")
       (bg2 "#2c2c2c")
       (comment "#888888")
-      (keyword "#d0a8ff")
-      (builtin "#9bd0ff")
-      (string "#b5b5b5")
-      (func "#ffffff")
-      (var "#ffffff")
-      (type "#fff09b")
-      (const "#f78c6c")
-      (warning "#ff5370"))
+      (keyword "#d0c4e0")      ;; Mellow lavender
+      (builtin "#c8bcd8")      ;; Soft lavender
+      (string "#b8b0d0")       ;; Medium mellow lavender
+      (func "#e8e0f0")         ;; Very light lavender
+      (var "#d8d0e8")          ;; Light lavender
+      (type "#c8c0d8")         ;; Gentle lavender
+      (const "#b8b0d0")        ;; Medium lavender
+      (warning "#ddaaaa"))
   (custom-theme-set-faces
    'custom-dark
    `(default ((,class (:background ,bg1 :foreground ,fg1))))
@@ -37,6 +37,10 @@
    `(mode-line-inactive ((,class (:background "#2a2a2a" :foreground "#cccccc" :box nil))))
    `(header-line ((,class (:background "#2a2a2a" :foreground "#ffffff" :box nil))))
    `(helm-selection ((,class (:background ,bg2 :foreground ,fg1))))
-   `(helm-match ((,class (:foreground ,keyword :underline t))))))
+   `(helm-match ((,class (:foreground ,keyword :underline t))))
+   ;; diff-hl colors (git change indicators in fringe)
+   `(diff-hl-insert ((,class (:foreground "#50a050" :background "#50a050"))))  ; Green for added
+   `(diff-hl-change ((,class (:foreground "#5080b0" :background "#5080b0"))))  ; Blue for modified
+   `(diff-hl-delete ((,class (:foreground "#d05050" :background "#d05050")))))) ; Red for deleted
 (custom-theme-set-variables 'custom-dark)
 (provide-theme 'custom-dark)

@@ -1,10 +1,7 @@
-;;; early-init.el --- Early init tweaks -*- lexical-binding: t; -*-
+;;; early-init.el --- Early initialization file -*- lexical-binding: t; -*-
+;; This file is loaded earliest in the Emacs startup process
 
-;;; Commentary:
-;; Disable package.el since we use straight.el
-
-;;; Code:
-
+;; This line prevents package.el from loading and adding its overhead.
 (setq package-enable-at-startup nil)
 
 (provide 'early-init)

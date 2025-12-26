@@ -1,424 +1,162 @@
-#+TITLE: My Emacs Configuration
-#+AUTHOR: Raayan Dhar
+#+TITLE: EMACS
+#+AUTHOR: RD
 #+STARTUP: showeverything
 #+OPTIONS: toc:nil
 
-* Package Management
+* PACKAGE MANAGEMENT
 #+begin_src emacs-lisp
-;; Bootstrap straight.el
-(defvar bootstrap-version)
-(let ((bootstrap-file
-       (expand-file-name "straight/repos/straight.el/bootstrap.el"
-                         user-emacs-directory))
-      (bootstrap-version 6))
-  (unless (file-exists-p bootstrap-file)
-    (with-current-buffer
-        (url-retrieve-synchronously
-         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
-         'silent 'inhibit-cookies)
-      (goto-char (point-max))
-      (eval-print-last-sexp)))
-  (load bootstrap-file nil 'nomessage))
+  ;; straight.el is bootstrapped in init.el (before this file loads)
+  ;; This ensures org version consistency
 
-;; Integrate straight.el with use-package
-(straight-use-package 'use-package)
-(setq straight-use-package-by-default t)
+  ;; Install use-package via straight
+  (straight-use-package 'use-package)
+
+  ;; Make straight.el the default package manager for all use-package declarations
+  (setq straight-use-package-by-default t)
 #+end_src
 
-* CUDA
+* TREE-SITTER
 #+begin_src emacs-lisp
-(require 'treesit)
+;; Register grammar sources
+(setq treesit-language-source-alist
+      '((python "https://github.com/tree-sitter/tree-sitter-python")
+        (c      "https://github.com/tree-sitter/tree-sitter-c")
+        (cpp    "https://github.com/tree-sitter/tree-sitter-cpp")
+        (cuda   "https://github.com/tree-sitter-grammars/tree-sitter-cuda")))
 
-;; --- Define CUDA mode (inherits C++) ---
-(define-derived-mode cuda-ts-mode c++-ts-mode "CUDA[ts]"
-  "Major mode for CUDA using Tree-sitter (inherits C++ config)."
-  ;; Create CUDA parser if grammar is available.
-  (when (treesit-ready-p 'cuda)
-    (treesit-parser-create 'cuda)
-    (treesit-major-mode-setup)))
+;; Run: M-x install-treesit-grammars
+(defun install-treesit-grammars ()
+  "Install all tree-sitter grammars defined in treesit-language-source-alist."
+  (interactive)
+  (dolist (lang treesit-language-source-alist)
+    (let ((lang-name (car lang)))
+      (unless (treesit-language-available-p lang-name)
+        (message "Installing tree-sitter grammar for %s..." lang-name)
+        (treesit-install-language-grammar lang-name)))))
 
-;; --- Tree-sitter auto setup ---
-(use-package treesit-auto
-  :custom
-  (treesit-auto-install t)
-  :config
-  ;; Register CUDA grammar
-  (add-to-list 'treesit-auto-recipe-list
-               (make-treesit-auto-recipe
-                :lang 'cuda
-                :ts-mode 'cuda-ts-mode
-                :url "https://github.com/tree-sitter-grammars/tree-sitter-cuda"
-                :ext "\\.cu\\'\\|\\.cuh\\'"))
-  (treesit-auto-add-to-auto-mode-alist 'all)
-  (global-treesit-auto-mode 1))
+;; Use tree-sitter modes for Python and C++
+(add-to-list 'auto-mode-alist '("\\.py\\'" . python-ts-mode))
+(add-to-list 'auto-mode-alist '("\\.c\\'" . c-ts-mode))
+(add-to-list 'auto-mode-alist '("\\.cpp\\'" . c++-ts-mode))
+(add-to-list 'auto-mode-alist '("\\.h\\'" . c-ts-mode))
+(add-to-list 'auto-mode-alist '("\\.hpp\\'" . c++-ts-mode))
 
-;; Ensure CUDA files use cuda-ts-mode
-(add-to-list 'auto-mode-alist '("\\.cu\\'"  . cuda-ts-mode))
+;; CUDA mode: inherits from c++-ts-mode
+(define-derived-mode cuda-ts-mode c++-ts-mode "CUDA"
+  "Major mode for CUDA, derived from c++-ts-mode.")
+
+;; Use CUDA mode for .cu and .cuh files
+(add-to-list 'auto-mode-alist '("\\.cu\\'" . cuda-ts-mode))
 (add-to-list 'auto-mode-alist '("\\.cuh\\'" . cuda-ts-mode))
-
-;; Indentation, modeline, misc
-(defun my/cuda-setup ()
-  ;; Indent with C treesitter indent if available; otherwise a sane fallback
-  (setq-local indent-tabs-mode nil)
-  (cond
-   ((fboundp 'c-ts-mode-indent-line)
-    (setq-local indent-line-function #'c-ts-mode-indent-line))
-   ((fboundp 'c-ts-mode--indent-line) ;; older internals
-    (setq-local indent-line-function #'c-ts-mode--indent-line))
-   (t
-    (setq-local indent-line-function #'c-indent-line-or-region)))
-  ;; lsp-eldoc off (we'll use lsp-ui tooltip instead)
-  (eldoc-mode -1)
-  ;; Force modeline to say CUDA[ts] *after* c++-ts-mode tweaks it
-  (setq-local mode-name "CUDA[ts]")
-  (run-at-time 0 nil (lambda () (setq-local mode-name "CUDA[ts]"))))
-
-(add-hook 'cuda-ts-mode-hook #'my/cuda-setup)
-
-;; LSP integration (use clangd as C++)
-(with-eval-after-load 'lsp-mode
-  (add-to-list 'lsp-language-id-configuration '(cuda-ts-mode . "cpp"))
-  (lsp-register-client
-   (make-lsp-client
-    :new-connection (lsp-stdio-connection "clangd")
-    :activation-fn (lsp-activate-on "cpp")
-    :major-modes '(cuda-ts-mode)
-    :server-id 'clangd-cuda))
-  ;; Stop clangd from inserting includes on completion (e.g. __clang_cuda_runtime_wrapper.h)
-  (setq lsp-completion-enable-additional-text-edit nil
-        lsp-eldoc-enable-hover nil
-        lsp-signature-auto-activate nil
-        lsp-signature-render-documentation nil))
-
-(add-hook 'cuda-ts-mode-hook #'lsp-deferred)
-(add-hook 'cuda-ts-mode-hook #'yas-minor-mode)
-(add-hook 'cuda-ts-mode-hook #'projectile-mode)
-
-;; Format on save via clang-format
-(defun my/cuda-format-on-save ()
-  (when (derived-mode-p 'cuda-ts-mode)
-    (clang-format-buffer)))
-(add-hook 'before-save-hook #'my/cuda-format-on-save)
-
-;; CUDA keywords highlighting
-(font-lock-add-keywords 'cuda-ts-mode
-  '(("__global__"   . font-lock-keyword-face)
-    ("__device__"   . font-lock-keyword-face)
-    ("__host__"     . font-lock-keyword-face)
-    ("__shared__"   . font-lock-keyword-face)
-    ("__constant__" . font-lock-keyword-face)))
-
-;; Register grammars so M-x treesit-install-language-grammar finds them
-(with-eval-after-load 'treesit
-  (dolist (lang '((cuda "https://github.com/tree-sitter-grammars/tree-sitter-cuda")
-                  (c    "https://github.com/tree-sitter/tree-sitter-c")
-                  (cpp  "https://github.com/tree-sitter/tree-sitter-cpp")))
-    (add-to-list 'treesit-language-source-alist lang)))
-
-;; LSP-UI tooltip docs (and no minibuffer spam)
-(use-package lsp-ui
-  :after lsp-mode
-  :hook (lsp-mode . lsp-ui-mode)
-  :custom
-  (lsp-ui-doc-enable t)
-  (lsp-ui-doc-show-with-cursor t)
-  (lsp-ui-doc-show-with-mouse nil))
 #+end_src
 
-
-* Appearance and Theme
+* COMPLETION SYSTEM
 #+begin_src emacs-lisp
-;; Load your custom theme from the themes folder.
-(add-to-list 'custom-theme-load-path (expand-file-name "themes" user-emacs-directory))
-(load-theme 'custom-dark t)
-
-;; Disable menu, toolbar, and scrollbars for a minimal UI.
-(menu-bar-mode -1)
-(tool-bar-mode -1)
-(scroll-bar-mode -1)
-
-;; Set the default font size.
-(set-face-attribute 'default nil :height 100)
-;; Global absolute line numbers:
-(global-display-line-numbers-mode 1)
-(setq display-line-numbers-type t)  ;; Use absolute numbers, not relative.
-(column-number-mode 1)
-
-;; Set transparency (alpha 95% opaque).
-(set-frame-parameter (selected-frame) 'alpha '(95 . 95))
-(add-to-list 'default-frame-alist '(alpha . (95 . 95)))
-#+end_src
-
-* Completion System (Vertico + Consult + Marginalia + Embark)
-#+begin_src emacs-lisp
-;; Vertico: minimal completion UI
+;; Vertico + Consult + Marginalia + Embark
+;; Vertico: Vertical completion UI
 (use-package vertico
   :init
   (vertico-mode))
-
-;; Save minibuffer history across sessions
+;; Save minibuffer history across Emacs sessions
 (use-package savehist
   :init
   (savehist-mode))
-
-;; Marginalia: richer minibuffer annotations
+;; Marginalia: Shows file sizes, command descriptions, etc.
 (use-package marginalia
   :after vertico
   :init
   (marginalia-mode))
-
-;; Consult: commands built on completion
+;; Consult: Enhanced search and navigation commands
 (use-package consult
-  :bind (("C-M-s" . consult-line)           ;; search buffer
-         ("C-x b" . consult-buffer)       ;; switch buffer
-         ("M-y" . consult-yank-pop)       ;; browse kill-ring
-         ("C-x C-r" . consult-recent-file)
-         ("C-c f" . consult-find)))     ;; find files
-
-;; Embark: context-sensitive actions
+  :bind (("C-x b"   . consult-buffer)       ;; Switch buffer (better than default)
+         ("M-y"     . consult-yank-pop)     ;; Browse kill ring
+         ("C-x C-r" . consult-recent-file)  ;; Open recent file
+         ("C-c f"   . consult-find)))       ;; Find files
+;; C-s will use default isearch-forward
+;; Embark: Context-sensitive actions (right-click menu for minibuffer)
 (use-package embark
-  :bind (("C-." . embark-act)         ;; act on thing at point
-         ("C-;" . embark-dwim)        ;; smarter default action
-         ("C-h B" . embark-bindings)) ;; list keybindings
+  :bind (("C-."   . embark-act)         ;; Perform action on thing at point
+         ("C-;"   . embark-dwim)        ;; Smart default action
+         ("C-h B" . embark-bindings))   ;; Show all keybindings
   :init
   (setq prefix-help-command #'embark-prefix-help-command))
-
-;; Optional: consult integration with embark
+;; Embark + Consult integration
 (use-package embark-consult
   :after (embark consult)
   :demand t)
-#+end_src
-
-* Productivity & Dev Utilities
-#+begin_src emacs-lisp
-;; crux: collection of useful commands
-(use-package crux
-  :bind (("C-c o" . crux-open-with)               ;; open file externally
-         ("C-c d" . crux-duplicate-current-line-or-region)
-         ("C-c k" . crux-kill-other-buffers)
-         ("C-c f" . crux-recentf-find-file)))     ;; recent files
-
-;; expand-region: grow/shrink selection semantically
-(use-package expand-region
-  :bind (("C-=" . er/expand-region)
-         ("C--" . er/contract-region)))
-
-;; multiple-cursors: edit multiple places simultaneously
-(use-package multiple-cursors
-  :bind (("C-S-c C-S-c" . mc/edit-lines)
-         ("C->" . mc/mark-next-like-this)
-         ("C-<" . mc/mark-previous-like-this)
-         ("C-c C-<" . mc/mark-all-like-this)))
-
-;; quickrun: quickly execute code snippets/files
-(use-package quickrun
-  :bind (("C-c r" . quickrun)))  ;; reuses your run binding
-
-;; dumb-jump: jump to definitions using ripgrep
-(use-package dumb-jump
-  :bind (("M-g o" . dumb-jump-go-other-window)
-         ("M-g j" . dumb-jump-go)
-         ("M-g b" . dumb-jump-back)
-         ("M-g q" . dumb-jump-quick-look))
-  :config
-  (setq dumb-jump-prefer-searcher 'rg))
-
-;; deadgrep: project-wide ripgrep search
-(use-package deadgrep
-  :bind (("C-c s" . deadgrep)))
-
-;; vterm: full-featured terminal emulator inside Emacs
-(use-package vterm
-  :commands vterm
-  :config
-  (setq vterm-shell "/bin/bash")   ;; or zsh/fish if you prefer
-  (setq vterm-max-scrollback 10000))
-
-;; vlf: view/edit large files in chunks
-(use-package vlf
-  :config
-  (require 'vlf-setup))
-#+end_src
-
-
-* Org Mode Enhancements
-#+begin_src emacs-lisp
-(setq org-startup-indented t
-      org-return-follows-link t)
-
-(use-package org-bullets
-  :hook (org-mode . org-bullets-mode))
-
-(use-package toc-org
-  :commands toc-org-enable
-  :init (add-hook 'org-mode-hook 'toc-org-enable))
-
-(require 'org-tempo)
-
-;; Enhanced Org-mode settings for math and images.
-(setq org-html-with-latex 'mathjax)
-(setq org-html-mathjax-options
-      '((path "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js")
-        (scale "1")
-        (align "center")
-        (indent "2em")
-        (tags "ams")
-        (locales "en")
-        (fast-preview "false")))
-(setq org-image-actual-width nil)
-;; Enable live preview of LaTeX fragments.
-(use-package org-fragtog
-  :hook (org-mode . org-fragtog-mode))
-#+end_src
-
-* LaTeX Editing (AUCTeX + PDF Tools)
-#+begin_src emacs-lisp
-(use-package auctex)
-(setq TeX-auto-save t
-      TeX-parse-self t
-      TeX-command-default "LatexMk"
-      LaTeX-command "latex -shell-escape")
-
-;; Disable special fontification of scripts (superscripts/subscripts) so they match main text.
-(setq font-latex-fontify-script nil)
-
-(use-package pdf-tools
-  :config
-  (pdf-tools-install))
-
-(setq TeX-view-program-selection '((output-pdf "PDF Tools"))
-      TeX-source-correlate-start-server t)
-(setq TeX-view-program-list '(("PDF Tools" TeX-pdf-tools-sync-view)))
-(add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)
-(add-hook 'TeX-mode-hook (lambda () (define-key TeX-mode-map (kbd "RET") 'TeX-view)))
-(add-hook 'doc-view-mode-hook 'auto-revert-mode)
-(add-hook 'pdf-view-mode-hook (lambda () (display-line-numbers-mode -1)))
-#+end_src
-
-* Python Development
-#+begin_src emacs-lisp
-  ;;;; Python Development
-
-  ;; LSP with Pyright (type checking, completions, navigation, docs)
-  (use-package lsp-mode
-    :hook ((python-mode . lsp-deferred))
-    :commands (lsp lsp-deferred)
-    :custom
-    (lsp-keymap-prefix "C-c l")
-    (lsp-enable-symbol-highlighting t)
-    (lsp-prefer-flymake nil)
-    (lsp-pyright-auto-import-completions t)
-    (lsp-pyright-use-library-code-for-types t))
-
-  (use-package lsp-pyright
-    :after lsp-mode
-    :straight t
-    :hook (python-mode . (lambda ()
-                           (require 'lsp-pyright)
-                           (lsp-deferred))))
-
-  ;; Completion backend
-  (use-package company
-    :hook (prog-mode . company-mode)
-    :custom
-    (company-idle-delay 0.1)
-    (company-minimum-prefix-length 1))
-  (add-hook 'c++-ts-mode-hook #'company-mode)
-  (add-hook 'c-ts-mode-hook #'company-mode)
-  (add-hook 'cuda-ts-mode-hook #'company-mode)
-
-  ;; Modern modeline with venv display
-  (use-package doom-modeline
-    :hook (after-init . doom-modeline-mode)
-    :custom
-    (doom-modeline-height 15)
-    ;; Show Python environment name
-    (doom-modeline-python-executable "python")
-    (doom-modeline-env-version t)
-    (doom-modeline-env-enable-python t))
-
-  ;; Python venv management
-  (use-package pyvenv
-    :after python
-    :config
-    (setenv "WORKON_HOME" "~/.virtualenvs")
-
-    ;; Auto-activate venv/.venv if present
-    (defun my/auto-activate-venv ()
-      "Auto-activate a Python virtual environment if venv or .venv exists."
-      (let* ((root (or (locate-dominating-file default-directory "venv")
-                       (locate-dominating-file default-directory ".venv")))
-             (venv-path (when root
-                          (expand-file-name
-                           (if (file-exists-p (expand-file-name "venv" root))
-                               "venv"
-                             ".venv")
-                           root))))
-        (when (and venv-path (file-directory-p venv-path))
-          (pyvenv-activate venv-path)
-          (message "Activated venv: %s" venv-path))))
-
-    (add-hook 'python-mode-hook #'my/auto-activate-venv))
-
-  ;; Uv package manager integration (optional, modern replacement for pip/venv/poetry)
-  (use-package uv
-    :straight (uv :type git :host github :repo "johannes-mueller/uv.el")
-    :init
-    ;; Needed for parsing pyproject.toml
-    (require 'treesit)
-    (add-to-list 'treesit-language-source-alist
-                 '(toml "https://github.com/tree-sitter-grammars/tree-sitter-toml"))
-    (unless (treesit-language-available-p 'toml)
-      (treesit-install-language-grammar 'toml)))
-#+end_src
-
-* Sane Defaults
-#+begin_src emacs-lisp
-(delete-selection-mode 1)
-(global-auto-revert-mode 1)
-(electric-pair-mode 1)
-(setq auto-save-list-file-prefix nil)
-(setq transient-mark-mode t)
-(setq mouse-highlight nil)
-(setq enable-local-eval t)
-;; Disable backup (tilde) files.
-(setq make-backup-files nil)
-(setq auto-save-default nil)
-;; Always use y or n instead of full "yes" or "no".
-(defalias 'yes-or-no-p 'y-or-n-p)
-#+end_src
-
-* Recent Files
-#+begin_src emacs-lisp
-;; Enable recentf-mode so recent files appear.
+;; Recent files: Access with: C-x C-r (consult-recent-file)
 (use-package recentf
   :init
   (recentf-mode 1)
-  (setq recentf-max-menu-items 25))
+  (setq recentf-max-menu-items 25      ;; Show up to 25 recent files
+        recentf-max-saved-items 100))  ;; Remember 100 files across sessions
 #+end_src
 
-* Git Integration
-
+* DEFAULTS
 #+begin_src emacs-lisp
-;; --- Git Workflow Setup ---
 
-;; Magit: the Git porcelain inside Emacs
+;; When text is selected and you type, replace the selection (like most editors)
+(delete-selection-mode 1)
+;; Auto-revert buffers when files change on disk (useful for git operations)
+(global-auto-revert-mode 1)
+;; Automatically close brackets, quotes, and parentheses
+(electric-pair-mode 1)
+;; Don't create auto-save-list files that track auto-saved files
+(setq auto-save-list-file-prefix nil)
+;; Enable transient mark mode (highlight the active region)
+(setq transient-mark-mode t)
+;; Disable mouse highlighting (prevents accidental highlighting with mouse movement)
+(setq mouse-highlight nil)
+;; Allow evaluation of local variables in files (e.g., -*- mode: python -*-)
+(setq enable-local-eval t)
+;; Disable backup files (filename~ files)
+(setq make-backup-files nil)
+;; Disable auto-save files (#filename# files)
+(setq auto-save-default nil)
+;; Replace "yes or no" prompts with shorter "y or n" prompts
+(defalias 'yes-or-no-p 'y-or-n-p)
+#+end_src
+
+* APPEARANCE AND THEME
+#+begin_src emacs-lisp
+;; Load custom theme from themes directory
+(add-to-list 'custom-theme-load-path (expand-file-name "themes" user-emacs-directory))
+(load-theme 'custom-dark t)
+
+;; Remove GUI clutter for a clean, terminal-like appearance
+(menu-bar-mode -1)    ;; Remove the menu bar (File, Edit, Options, etc.)
+(tool-bar-mode -1)    ;; Remove the toolbar with icons
+(scroll-bar-mode -1)  ;; Remove the scroll bars
+;; Font configuration
+(set-face-attribute 'default nil :height 100)
+;; Line and column numbers in the margin
+(global-display-line-numbers-mode 1)  ;; Show line numbers in all buffers
+(setq display-line-numbers-type t)    ;; Use absolute line numbers (not relative)
+(column-number-mode 1)                ;; Show column number in the modeline
+;; Window transparency (95% opaque, 5% transparent)
+;; First number: active window opacity, Second number: inactive window opacity
+(set-frame-parameter (selected-frame) 'alpha '(95 . 95))       ;; Current frame
+(add-to-list 'default-frame-alist '(alpha . (95 . 95)))        ;; Future frames
+#+end_src
+
+* TRAMP (SSH SUPPORT)
+#+begin_src emacs-lisp
+;; TRAMP: Edit files over SSH transparently
+;; Usage: C-x C-f /ssh:user@host:/path/to/file
+(setq tramp-default-method "ssh")
+(setq tramp-verbose 1)  ;; Lower verbosity (less debug output)
+#+end_src
+
+* GIT INTEGRATION
+#+begin_src emacs-lisp
+;; Magit
 (use-package magit
-  :commands (magit-status magit-blame)
-  :bind (("C-x g" . magit-status))
+  :bind (("C-x g" . magit-status))  ;; Open git status
   :config
   (setq magit-display-buffer-function
-        #'magit-display-buffer-fullframe-status-v1
-        magit-log-section-commit-count 20))
+        #'magit-display-buffer-fullframe-status-v1))
 
-(with-eval-after-load 'magit
-  (declare-function magit-blame-quit "magit-blame"))
-
-;; Git Timemachine: step through revisions of a file
-(use-package git-timemachine
-  :bind (("C-x t" . git-timemachine)))
-
-;; Diff-hl: Git change markers (works locally + over SSH/TRAMP)
+;; diff-hl: Show git changes in the left fringe (margin)
 (use-package diff-hl
   :hook ((prog-mode  . diff-hl-mode)
          (org-mode   . diff-hl-mode)
@@ -426,246 +164,315 @@
          (after-init . global-diff-hl-mode))
   :config
   (diff-hl-flydiff-mode 1)
-
-  ;; Make sure it updates correctly over SSH / TRAMP
   (add-hook 'tramp-post-connection-hook #'diff-hl-update))
-
-;; Doom modeline already shows branch and VCS info.
-(use-package doom-modeline
-  :custom
-  (doom-modeline-vcs-max-length 20)) ;; limit branch name length
 #+end_src
 
-* Dashboard
+* PROJECT MANAGEMENT
 #+begin_src emacs-lisp
-(use-package dashboard
+;; Projectile: Project navigation and management
+(use-package projectile
   :init
-  (setq initial-buffer-choice 'dashboard-open
-        dashboard-center-content t
-        ;; Set the banner image to old.png.
-        dashboard-startup-banner (expand-file-name "img/mtn_optimized.png" user-emacs-directory)
-        ;; Set banner text below the image.
-        dashboard-banner-logo-title "No point waiting for dust to settle."
-        ;; Disable icons.
-        dashboard-set-heading-icons nil
-        dashboard-set-file-icons nil
-        ;; Exclude tilde files from recentf.
-        dashboard-recentf-exclude '(".*~$")
-        ;; Display recent files, bookmarks, and registers.
-        dashboard-items '((recents . 5)
-                          (bookmarks . 3)
-                          (registers . 3))
-        ;; Set custom footer messages.
-        dashboard-footer-messages '(""))
+  (projectile-mode +1)
+  :custom
+  (projectile-completion-system 'vertico)
+  :bind-keymap
+  ("C-c p" . projectile-command-map)  ;; C-c p prefix for projectile commands
   :config
-  (dashboard-setup-startup-hook))
+  (setq projectile-switch-project-action #'projectile-dired))
+
+;; Treemacs: File tree sidebar
+(use-package treemacs
+  :bind (("C-c t" . treemacs))  ;; Toggle treemacs sidebar
+  :config
+  ;; Disable icons for minimal aesthetic
+  (setq treemacs-no-png-images t)
+  ;; Follow current file
+  (treemacs-follow-mode t)
+  ;; Integration with projectile
+  (treemacs-project-follow-mode t))
+
+;; Treemacs + Projectile integration
+(use-package treemacs-projectile
+  :after (treemacs projectile))
+
+;; Treemacs + Magit integration
+(use-package treemacs-magit
+  :after (treemacs magit))
 #+end_src
 
-* Navigation Enhancements
+* UI ENHANCEMENTS
 #+begin_src emacs-lisp
-;; Avy: jump quickly to visible text using a char-based hint
-(use-package avy
-  :bind (("C-:" . avy-goto-char)       ;; jump to a char
-         ("C-'" . avy-goto-char-2)     ;; jump to 2-char sequence
-         ("M-g f" . avy-goto-line)     ;; jump to a line
-         ("M-g w" . avy-goto-word-1))  ;; jump to a word
+;; which-key: Show available keybindings in popup
+(use-package which-key
+  :init
+  (which-key-mode 1)
   :config
-  (setq avy-background t))             ;; dim background while choosing
+  (setq which-key-idle-delay 0.5))  ;; Show after 0.5 seconds
 
-;; link-hint: like avy, but for clickable things (links, buttons, etc.)
-(use-package link-hint
-  :bind (("C-c l o" . link-hint-open-link)   ;; open link/button at point
-         ("C-c l c" . link-hint-copy-link))) ;; copy link/button target
-#+end_src
-
-
-* Doom Modeline (No Icons)
-#+begin_src emacs-lisp
+;; doom-modeline: Better status line at bottom
 (use-package doom-modeline
   :init
   (doom-modeline-mode 1)
   :custom
   (doom-modeline-height 15)
-  ;; Disable icons.
+  ;; Disable icons for minimal aesthetic
   (doom-modeline-icon nil)
   (doom-modeline-buffer-state-icon nil)
-  (doom-modeline-buffer-modification-icon nil))
+  (doom-modeline-buffer-modification-icon nil)
+  ;; Show git info
+  (doom-modeline-vcs-max-length 20)
+  ;; Show Python venv
+  (doom-modeline-python-executable "python")
+  (doom-modeline-env-version t)
+  (doom-modeline-env-enable-python t))
 #+end_src
 
-* Tramp Setup
+* ORG MODE
 #+begin_src emacs-lisp
-;; Configure Tramp to use SSH and lower verbosity.
-(setq tramp-default-method "ssh")
-(setq tramp-verbose 1)
-#+end_src
+;; Basic org-mode settings
+(setq org-startup-indented t          ;; Indent content under headings
+      org-return-follows-link t       ;; RET follows links
+      org-image-actual-width nil)     ;; Don't force image width
 
-* C/C++ Development
-#+begin_src emacs-lisp
-;; --- C/C++ Development Setup ---
-
-;; 1. LSP Setup for C/C++ using clangd:
-(use-package lsp-mode
-  :hook ((c-mode c++-mode) . lsp-deferred)  ; Start LSP in C/C++ modes automatically.
-  :commands lsp
+;; org-tempo: Quick structure templates (type <s TAB for code block, etc.)
+(require 'org-tempo)
+;; org-bullets: Pretty bullets instead of asterisks
+(use-package org-bullets
+  :hook (org-mode . org-bullets-mode))
+;; toc-org: Automatically generate/update table of contents
+;; Add a :toc at the top to generate.
+(use-package toc-org
+  :hook (org-mode . toc-org-enable))
+;; org-fragtog: Live LaTeX preview in org files
+;; Just use something like $e = mc^2$
+(use-package org-fragtog
+  :hook (org-mode . org-fragtog-mode))
+;; LaTeX export settings (for HTML export with math)
+(setq org-html-with-latex 'mathjax)
+(setq org-html-mathjax-options
+      '((path "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js")
+        (scale "1")
+        (align "center")
+        (indent "2em")
+        (tags "ams")))
+;; org-roam: Zettelkasten note-taking system with backlinks
+;; TODO: learn how to use this!
+(use-package org-roam
   :custom
-  (lsp-idle-delay 0.5)                      ; Wait 0.5 seconds of inactivity.
-  (lsp-clients-clangd-executable "clangd")) ; Ensure clangd is installed and in PATH.
-
-;; 2. Enhanced Syntax Highlighting:
-(use-package modern-cpp-font-lock
-  :hook (c++-mode . modern-c++-font-lock-mode)
+  (org-roam-directory "~/Github/rivendell")  ;; Change this to your preferred location
+  (org-roam-completion-everywhere t)
+  :bind (("C-c n f" . org-roam-node-find)          ;; Find or create note
+         ("C-c n i" . org-roam-node-insert)        ;; Insert link to note
+         ("C-c n l" . org-roam-buffer-toggle)      ;; Toggle backlinks
+         ("C-c n d" . org-roam-dailies-goto-today) ;; Today's daily note
+         ("C-c n c" . org-roam-capture))           ;; Capture new note
   :config
-  (modern-c++-font-lock-mode 1))
+  ;; Initialize the database on startup
+  (org-roam-db-autosync-mode))
 
-;; 3. Snippet Support:
+;; org-roam-ui: Visual graph interface for org-roam
+;; Access with: M-x org-roam-ui-mode
+(use-package org-roam-ui
+  :after org-roam
+  :custom
+  (org-roam-ui-sync-theme t)
+  (org-roam-ui-follow t)
+  (org-roam-ui-update-on-save t))
+#+end_src
+
+* LATEX
+#+begin_src emacs-lisp
+;; AUCTeX: Enhanced LaTeX editing
+(use-package auctex
+  :config
+  (setq TeX-auto-save t                    ;; Auto-save style information
+        TeX-parse-self t                   ;; Parse documents to provide completion
+        TeX-command-default "LatexMk"      ;; Use latexmk by default (handles multiple passes)
+        LaTeX-command "latex -shell-escape" ;; Enable shell-escape for minted, etc.
+        ;; Disable special fontification of superscripts/subscripts (keeps text uniform)
+        font-latex-fontify-script nil))
+
+;; pdf-tools: View PDFs inside Emacs (better than DocView)
+(use-package pdf-tools
+  :config
+  (pdf-tools-install)
+
+  ;; Use pdf-tools for viewing PDFs
+  (setq TeX-view-program-selection '((output-pdf "PDF Tools"))
+        TeX-source-correlate-start-server t)
+  (setq TeX-view-program-list '(("PDF Tools" TeX-pdf-tools-sync-view)))
+
+  ;; Auto-refresh PDF after compilation
+  (add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)
+
+  ;; Press RET in TeX buffer to view PDF
+  (add-hook 'TeX-mode-hook
+            (lambda ()
+              (define-key TeX-mode-map (kbd "RET") 'TeX-view)))
+
+  ;; Auto-revert PDF when file changes
+  (add-hook 'doc-view-mode-hook 'auto-revert-mode)
+
+  ;; Disable line numbers in PDF view (cleaner)
+  (add-hook 'pdf-view-mode-hook
+            (lambda ()
+              (display-line-numbers-mode -1))))
+#+end_src
+
+* DEVELOPMENT TOOLS
+#+begin_src emacs-lisp
+;; Company: Auto-completion framework
+(use-package company
+  :hook (prog-mode . company-mode)  ;; Enable in all programming modes
+  :custom
+  (company-idle-delay 0.1)                 ;; Show completions after 0.1s
+  (company-minimum-prefix-length 1)        ;; Show completions after 1 character
+  :config
+  ;; Enable in tree-sitter modes
+  (add-hook 'python-ts-mode-hook #'company-mode)
+  (add-hook 'c-ts-mode-hook #'company-mode)
+  (add-hook 'c++-ts-mode-hook #'company-mode)
+  (add-hook 'cuda-ts-mode-hook #'company-mode))
+
+;; yasnippet: Code snippet system
 (use-package yasnippet
   :init
-  (yas-global-mode 1))
+  (yas-global-mode 1)  ;; Enable snippets globally
+  :config
+  (setq yas-snippet-dirs
+        (list (expand-file-name "snippets" user-emacs-directory))))
+
+;; yasnippet-snippets: Collection of pre-made snippets
 (use-package yasnippet-snippets
   :after yasnippet)
 
-;; 4. CMake Support:
-(use-package cmake-font-lock
-  :hook (cmake-mode . cmake-font-lock-activate))
-
-(use-package cmake-ide
-  :config
-  ;; Automatically configure LSP/clangd from CMake projects
-  (cmake-ide-setup))
-
-;; 5. Code Formatting with clang-format:
-(use-package clang-format
-  :bind (("C-c f" . clang-format-buffer)
-         ("C-c r" . clang-format-region))
-  :hook ((c-mode c++-mode) . (lambda ()
-                               (add-hook 'before-save-hook #'clang-format-buffer nil t))))
-
-;; 6. Project Navigation with Projectile:
-(use-package projectile
-  :init
-  (projectile-mode +1)
+;; vterm: Full-featured terminal emulator
+(use-package vterm
+  :commands vterm
+  :bind ("C-c v" . vterm)  ;; C-c v to open terminal
   :custom
-  (projectile-completion-system 'vertico) ;; or 'vertico
-  :config
-  (setq projectile-project-search-path '("~/cpp_projects"))
-  (setq projectile-switch-project-action #'projectile-dired))
-
-;; 7. Which-Key for Keybinding Hints:
-(use-package which-key
-  :init (which-key-mode 1)
-  :config
-  (setq which-key-idle-delay 0.5))
-
-;; 8. Buffer-Move for Swapping Buffers Between Windows:
-(use-package buffer-move
-  :commands (buf-move-up buf-move-down buf-move-left buf-move-right)
-  :config
-  (setq buffer-move-behavior 'swap))
-
-(add-hook 'c++-ts-mode-hook #'company-mode)
-(add-hook 'c-ts-mode-hook   #'company-mode)
+  (vterm-shell "/bin/bash")        ;; Change to zsh/fish if you prefer
+  (vterm-max-scrollback 10000))    ;; Keep 10k lines of scrollback
 #+end_src
 
-
-* Java Development
+* PYTHON DEVELOPMENT
 #+begin_src emacs-lisp
-;; --- Java Development Setup ---
-;; Use lsp-java for enhanced Java support. This sets up LSP for Java and enables features
-;; such as code completion, error checking, and formatting.
+;; LSP mode
+(use-package lsp-mode
+  :hook ((python-ts-mode . lsp-deferred)   ;; Enable for Python
+         (python-mode . lsp-deferred))     ;; Fallback for non-ts mode
+  :commands (lsp lsp-deferred)
+  :custom
+  (lsp-keymap-prefix "C-c l")                          ;; Prefix for LSP commands
+  (lsp-enable-symbol-highlighting t)                   ;; Highlight symbol at point
+  (lsp-prefer-flymake nil)                            ;; Use flycheck instead
+  (lsp-idle-delay 0.5)                                ;; Debounce time
+  ;; Pyright specific settings
+  (lsp-pyright-auto-import-completions t)             ;; Auto-import suggestions
+  (lsp-pyright-use-library-code-for-types t)          ;; Infer types from libraries
+  ;; Disable specific diagnostics (adjust as needed)
+  ;; (lsp-pyright-diagnostic-mode "openFilesOnly")       ;; Only check open files
+  (lsp-pyright-type-checking-mode "standard"))           ;; Less strict type checking
 
-(use-package lsp-java
-  :ensure t
-  :hook (java-mode . lsp-deferred)
+;; lsp-ui: UI improvements for LSP (sideline info, docs, etc.)
+(use-package lsp-ui
+  :after lsp-mode
+  :hook (lsp-mode . lsp-ui-mode)
+  :custom
+  (lsp-ui-doc-enable t)                    ;; Show docs on hover
+  (lsp-ui-doc-show-with-cursor t)          ;; Show docs when cursor is on symbol
+  (lsp-ui-sideline-enable t)               ;; Show info in sideline
+  (lsp-ui-sideline-show-diagnostics t))    ;; Show errors/warnings in sideline
+
+;; lsp-pyright: Python language server
+(use-package lsp-pyright
+  :after lsp-mode
+  :hook (python-ts-mode . (lambda ()
+                            (require 'lsp-pyright)
+                            (lsp-deferred))))
+
+;; Python virtual environment management
+(use-package pyvenv
   :config
-  (setq lsp-java-save-action-organize-imports t
-        ;; Optionally, you can set up a formatting style. For example, the Google Java Style:
-        lsp-java-format-settings-url "https://raw.githubusercontent.com/google/styleguide/gh-pages/eclipse-java-google-style.xml"
-        lsp-java-format-settings-profile "GoogleStyle"))
+  ;; Auto-activate venv/.venv if present in project
+  (defun my/auto-activate-venv ()
+    "Auto-activate a Python virtual environment if venv or .venv exists."
+    (let* ((root (or (locate-dominating-file default-directory "venv")
+                     (locate-dominating-file default-directory ".venv")))
+           (venv-path (when root
+                        (expand-file-name
+                         (if (file-exists-p (expand-file-name "venv" root))
+                             "venv"
+                           ".venv")
+                         root))))
+      (when (and venv-path (file-directory-p venv-path))
+        (pyvenv-activate venv-path)
+        (message "Activated venv: %s" venv-path))))
 
-;; A simple command to compile and run the current Java file.
-(defun run-java-file ()
-  "Compile and run the current Java file.
-Assumes the file contains a public class with a main method."
-  (interactive)
-  (let* ((file (buffer-file-name))
-         (class (file-name-base file)))
-    (if file
-        (compile (format "javac %s && java %s"
-                         (shell-quote-argument file)
-                         (shell-quote-argument class)))
-      (message "Buffer is not visiting a file."))))
+  (add-hook 'python-ts-mode-hook #'my/auto-activate-venv)
+  (add-hook 'python-mode-hook #'my/auto-activate-venv))
 #+end_src
 
-* Interactive Run Commands
+* C++/CUDA DEVELOPMENT
 #+begin_src emacs-lisp
-;; Function to compile and run the current C++ file.
-(defun run-cpp-17 ()
-  "Compile and run the current C++ file.
-Uses clang++ with -std=c++17 and -O2 optimization.
-The executable is created in the same directory with the same base name."
-  (interactive)
-  (let* ((file (buffer-file-name))
-         (exe (concat (file-name-sans-extension file))))
-    (if file
-        (compile (format "clang++ -std=c++17 -O2 %s -o %s && %s"
-                         (shell-quote-argument file)
-                         (shell-quote-argument exe)
-                         (shell-quote-argument exe)))
-      (message "Buffer is not visiting a file."))))
+(use-package lsp-mode
+  :hook ((c-ts-mode . lsp-deferred)
+         (c++-ts-mode . lsp-deferred)
+         (cuda-ts-mode . lsp-deferred))
+  :custom
+  (lsp-clients-clangd-executable "clangd")
+  :config
+  ;; Configure CUDA mode to use clangd as C++
+  (add-to-list 'lsp-language-id-configuration '(cuda-ts-mode . "cpp"))
 
-;; Function to run the current Python file using python3.
-(defun run-python-file ()
-  "Run the current Python file using python3."
-  (interactive)
-  (let ((file (buffer-file-name)))
-    (if file
-        (compile (format "python3 %s" (shell-quote-argument file)))
-      (message "Buffer is not visiting a file."))))
+  (with-eval-after-load 'lsp-mode
+    (lsp-register-client
+     (make-lsp-client
+      :new-connection (lsp-stdio-connection "clangd")
+      :activation-fn (lsp-activate-on "cpp")
+      :major-modes '(cuda-ts-mode)
+      :server-id 'clangd-cuda))))
 
-;; Function to compile CUDA files and run the resulting executable.
-(defun run-cuda-files (&optional files)
-  "Compile CUDA source files using nvcc and run the executable if compilation succeeds.
-If FILES is not provided, default to the current buffer's file.
-The executable is created with the same base name and an '.out' extension."
-  (interactive)
-  (let* ((file-list (if files files (list (buffer-file-name))))
-         (first-file (car file-list))
-         (exe (concat (file-name-sans-extension first-file) ".out"))
-         (cmd (mapconcat 'shell-quote-argument file-list " "))
-         (full-cmd (format "nvcc -arch=sm_86 -O3 %s -o %s && %s"
-                           cmd
-                           (shell-quote-argument exe)
-                           (shell-quote-argument exe))))
-    (if first-file
-        (compile full-cmd)
-      (message "No CUDA file available in buffer."))))
+;; clang-format: Code formatting
+(use-package clang-format
+  :bind (("C-c C-f" . clang-format-buffer)      ;; Format whole buffer
+         ("C-c C-r" . clang-format-region)))    ;; Format region
+;; Note: NOT auto-formatting on save to avoid indentation issues
+;; Use C-c C-f to manually format when needed
+
+;; CUDA keyword highlighting
+(with-eval-after-load 'cuda-ts-mode
+  (font-lock-add-keywords 'cuda-ts-mode
+    '(("__global__"   . font-lock-keyword-face)
+      ("__device__"   . font-lock-keyword-face)
+      ("__host__"     . font-lock-keyword-face)
+      ("__shared__"   . font-lock-keyword-face)
+      ("__constant__" . font-lock-keyword-face)
+      ("__syncthreads" . font-lock-builtin-face)
+      ("blockIdx" . font-lock-builtin-face)
+      ("threadIdx" . font-lock-builtin-face)
+      ("blockDim" . font-lock-builtin-face)
+      ("gridDim" . font-lock-builtin-face))))
+
+;; CUDA setup hook
+(defun my/cuda-setup ()
+  "Setup function for CUDA mode."
+  (setq-local indent-tabs-mode nil)
+  ;; Disable some LSP features that can be noisy in CUDA
+  (setq-local lsp-completion-enable-additional-text-edit nil
+              lsp-eldoc-enable-hover t
+              lsp-signature-auto-activate t))
+
+(add-hook 'cuda-ts-mode-hook #'my/cuda-setup)
 #+end_src
 
-* Key Bindings
+* KEYBINDINGS
 #+begin_src emacs-lisp
-(global-set-key (kbd "C-x C-b") 'ibuffer)
+;; Reload config
 (global-set-key (kbd "C-c r") (lambda () (interactive) (load-file user-init-file)))
-;; Zoom in/out commands.
+;; Better buffer list
+(global-set-key (kbd "C-x C-b") 'ibuffer)
+;; Zoom in/out
 (global-set-key (kbd "C-=") 'text-scale-increase)
 (global-set-key (kbd "C--") 'text-scale-decrease)
-(global-set-key (kbd "<C-wheel-up>") 'text-scale-increase)
-(global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
-;; Single ESC to quit the minibuffer.
-(global-set-key [escape] 'keyboard-escape-quit)
-#+end_src
-
-* Future Modules
-#+begin_src emacs-lisp
-;; Command to recursively delete all files ending with a tilde in the current directory.
-(defun delete-tilde-files ()
-  "Delete all files ending with a tilde in the current directory recursively."
-  (interactive)
-  (shell-command "find . -type f -name '*~' -delete"))
-
-;; Command to recursively delete all files ending with a tilde from the root directory.
-(defun delete-tilde-files-root ()
-  "Delete all files ending with a tilde from the root directory recursively.
-WARNING: This will delete backup files from the entire filesystem. Use with caution."
-  (interactive)
-  (shell-command "sudo find / -type f -name '*~' -delete"))
 #+end_src

@@ -1,0 +1,56 @@
+# Alacritty Configuration
+# Matches Emacs custom-dark theme with mellow lavender accents
+
+[window]
+opacity = 0.95
+padding = { x = 10, y = 10 }
+decorations = "full"
+
+[font]
+normal = { family = "monospace", style = "Regular" }
+size = 10.0
+
+[colors.primary]
+background = "#1c1c1c"  # Dark gray (matches Emacs bg)
+foreground = "#dddddd"  # Light gray (matches Emacs fg)
+
+[colors.cursor]
+text = "#1c1c1c"
+cursor = "#dddddd"
+
+[colors.selection]
+text = "#dddddd"
+background = "#2c2c2c"  # Slightly lighter gray
+
+# Normal colors
+[colors.normal]
+black   = "#1c1c1c"
+red     = "#d05050"     # Muted red
+green   = "#50a050"     # Muted green (git add)
+yellow  = "#c8c0d8"     # Lavender
+blue    = "#5080b0"     # Muted blue (git modified)
+magenta = "#d0c4e0"     # Mellow lavender (matches keywords)
+cyan    = "#c8bcd8"     # Soft lavender (matches builtins)
+white   = "#dddddd"
+
+# Bright colors
+[colors.bright]
+black   = "#888888"     # Medium gray (matches comments)
+red     = "#ff5370"     # Brighter red
+green   = "#50a050"     # Muted green
+yellow  = "#d8d0e8"     # Light lavender (matches vars)
+blue    = "#5080b0"     # Muted blue
+magenta = "#e8e0f0"     # Very light lavender (matches funcs)
+cyan    = "#b8b0d0"     # Medium lavender (matches strings)
+white   = "#ffffff"
+
+[scrolling]
+history = 10000
+multiplier = 3
+
+[keyboard]
+# Vi mode for scrolling (optional)
+# bindings = [
+#   { key = "K", mods = "Control", action = "ScrollLineUp" },
+#   { key = "J", mods = "Control", action = "ScrollLineDown" },
+# ]

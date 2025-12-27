@@ -8,7 +8,7 @@ decorations = "full"
 
 [font]
 normal = { family = "monospace", style = "Regular" }
-size = 10.0
+size = 8.0
 
 [colors.primary]
 background = "#1c1c1c"  # Dark gray (matches Emacs bg)

@@ -127,8 +127,8 @@
 (menu-bar-mode -1)    ;; Remove the menu bar (File, Edit, Options, etc.)
 (tool-bar-mode -1)    ;; Remove the toolbar with icons
 (scroll-bar-mode -1)  ;; Remove the scroll bars
-;; Font configuration
-(set-face-attribute 'default nil :height 100)
+;; Font configuration (height 80 = 80% of default size)
+(set-face-attribute 'default nil :height 80)
 ;; Line and column numbers in the margin
 (global-display-line-numbers-mode 1)  ;; Show line numbers in all buffers
 (setq display-line-numbers-type t)    ;; Use absolute line numbers (not relative)

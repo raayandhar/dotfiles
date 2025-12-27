@@ -6,7 +6,7 @@
       (bg1 "#1c1c1c")
       (fg2 "#aaaaaa")
       (bg2 "#2c2c2c")
-      (comment "#888888")
+      (comment "#96b4dc")      ;; Pastel blue (matches bash prompt venv)
       (keyword "#d0c4e0")      ;; Mellow lavender
       (builtin "#c8bcd8")      ;; Soft lavender
       (string "#b8b0d0")       ;; Medium mellow lavender
@@ -19,6 +19,7 @@
    'custom-dark
    `(default ((,class (:background ,bg1 :foreground ,fg1))))
    `(font-lock-comment-face ((,class (:foreground ,comment :slant italic))))
+   `(font-lock-doc-face ((,class (:foreground ,comment :slant italic))))  ; Docstrings (""" """)
    `(font-lock-keyword-face ((,class (:foreground ,keyword :weight bold))))
    `(font-lock-builtin-face ((,class (:foreground ,builtin))))
    `(font-lock-string-face ((,class (:foreground ,string))))
@@ -41,6 +42,10 @@
    ;; diff-hl colors (git change indicators in fringe)
    `(diff-hl-insert ((,class (:foreground "#50a050" :background "#50a050"))))  ; Green for added
    `(diff-hl-change ((,class (:foreground "#5080b0" :background "#5080b0"))))  ; Blue for modified
-   `(diff-hl-delete ((,class (:foreground "#d05050" :background "#d05050")))))) ; Red for deleted
+   `(diff-hl-delete ((,class (:foreground "#d05050" :background "#d05050"))))  ; Red for deleted
+   ;; Tree-sitter and Python docstrings
+   `(tree-sitter-hl-face:doc ((,class (:foreground ,comment :slant italic))))
+   `(tree-sitter-hl-face:string.documentation ((,class (:foreground ,comment :slant italic))))
+   `(python-docstring-face ((,class (:foreground ,comment :slant italic))))))
 (custom-theme-set-variables 'custom-dark)
 (provide-theme 'custom-dark)

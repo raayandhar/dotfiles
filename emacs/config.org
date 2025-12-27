@@ -357,10 +357,16 @@
 
 * PYTHON DEVELOPMENT
 #+begin_src emacs-lisp
+;; Helper function: only start LSP for local files (not over TRAMP/SSH)
+(defun my/lsp-deferred-if-local ()
+  "Start LSP only if file is local (not remote via TRAMP)."
+  (unless (file-remote-p default-directory)
+    (lsp-deferred)))
+
 ;; LSP mode
 (use-package lsp-mode
-  :hook ((python-ts-mode . lsp-deferred)   ;; Enable for Python
-         (python-mode . lsp-deferred))     ;; Fallback for non-ts mode
+  :hook ((python-ts-mode . my/lsp-deferred-if-local)   ;; Enable for local Python files
+         (python-mode . my/lsp-deferred-if-local))     ;; Fallback for non-ts mode
   :commands (lsp lsp-deferred)
   :custom
   (lsp-keymap-prefix "C-c l")                          ;; Prefix for LSP commands
@@ -416,9 +422,9 @@
 * C++/CUDA DEVELOPMENT
 #+begin_src emacs-lisp
 (use-package lsp-mode
-  :hook ((c-ts-mode . lsp-deferred)
-         (c++-ts-mode . lsp-deferred)
-         (cuda-ts-mode . lsp-deferred))
+  :hook ((c-ts-mode . my/lsp-deferred-if-local)
+         (c++-ts-mode . my/lsp-deferred-if-local)
+         (cuda-ts-mode . my/lsp-deferred-if-local))
   :custom
   (lsp-clients-clangd-executable "clangd")
   :config

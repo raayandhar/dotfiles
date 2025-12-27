@@ -22,26 +22,26 @@ cursor = "#dddddd"
 text = "#dddddd"
 background = "#2c2c2c"  # Slightly lighter gray
 
-# Normal colors
+# Normal colors (lavender/pastel theme - matches Emacs)
 [colors.normal]
 black   = "#1c1c1c"
-red     = "#d05050"     # Muted red
-green   = "#50a050"     # Muted green (git add)
-yellow  = "#c8c0d8"     # Lavender
-blue    = "#5080b0"     # Muted blue (git modified)
-magenta = "#d0c4e0"     # Mellow lavender (matches keywords)
-cyan    = "#c8bcd8"     # Soft lavender (matches builtins)
+red     = "#e5a3c7"     # Rose pink
+green   = "#a8d5ba"     # Sage green
+yellow  = "#e8d5b7"     # Cream
+blue    = "#b8b0d0"     # Lavender blue (matches Emacs strings)
+magenta = "#d0c4e0"     # Mellow lavender (matches Emacs keywords)
+cyan    = "#c8bcd8"     # Soft lavender (matches Emacs builtins)
 white   = "#dddddd"
 
 # Bright colors
 [colors.bright]
-black   = "#888888"     # Medium gray (matches comments)
-red     = "#ff5370"     # Brighter red
-green   = "#50a050"     # Muted green
-yellow  = "#d8d0e8"     # Light lavender (matches vars)
-blue    = "#5080b0"     # Muted blue
-magenta = "#e8e0f0"     # Very light lavender (matches funcs)
-cyan    = "#b8b0d0"     # Medium lavender (matches strings)
+black   = "#888888"     # Medium gray
+red     = "#f5b3d7"     # Bright rose
+green   = "#b8e5ca"     # Bright sage
+yellow  = "#f8e5c7"     # Bright cream
+blue    = "#c8c0d8"     # Bright lavender (matches Emacs types)
+magenta = "#e8e0f0"     # Very light lavender (matches Emacs funcs)
+cyan    = "#d8d0e8"     # Light lavender (matches Emacs vars)
 white   = "#ffffff"
 
 [scrolling]

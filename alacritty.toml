@@ -1,6 +1,9 @@
 # Alacritty Configuration
 # Matches Emacs custom-dark theme with mellow lavender accents
 
+[env]
+TERM = "alacritty"
+
 [window]
 opacity = 0.95
 padding = { x = 10, y = 10 }

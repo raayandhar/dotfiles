@@ -19,11 +19,11 @@ ln -sf ~/Github/dotfiles/.tmux.conf ~/.tmux.conf
 - **Session**: A collection of windows (like a workspace)
 - **Window**: A full screen view (like a tab)
 - **Pane**: A split section of a window (like vim splits)
-- **Prefix**: Key combination that activates tmux commands (C-a in our config)
+- **Prefix**: Key combination that activates tmux commands (C-b in our config)
 
 ## Essential Keybindings
 
-**Prefix Key: `C-a`** (Control + a)
+**Prefix Key: `C-b`** (Control + b)
 
 ### Session Management
 
@@ -34,20 +34,20 @@ ln -sf ~/Github/dotfiles/.tmux.conf ~/.tmux.conf
 | `tmux ls`                  | List sessions                  |
 | `tmux attach -t name`      | Attach to session              |
 | `tmux kill-session -t name`| Kill session                   |
-| `C-a d`                    | Detach from session            |
-| `C-a $`                    | Rename session                 |
+| `C-b d`                    | Detach from session            |
+| `C-b $`                    | Rename session                 |
 
 ### Window Management
 
 | Keys    | Action                         |
 |---------|--------------------------------|
-| `C-a c` | Create new window              |
-| `C-a ,` | Rename current window          |
-| `C-a n` | Next window                    |
-| `C-a p` | Previous window                |
-| `C-a l` | Last window                    |
-| `C-a w` | List windows                   |
-| `C-a &` | Kill current window            |
+| `C-b c` | Create new window              |
+| `C-b ,` | Rename current window          |
+| `C-b n` | Next window                    |
+| `C-b p` | Previous window                |
+| `C-b l` | Last window                    |
+| `C-b w` | List windows                   |
+| `C-b &` | Kill current window            |
 | `M-1`   | Go to window 1                 |
 | `M-2`   | Go to window 2 (etc.)          |
 
@@ -55,30 +55,30 @@ ln -sf ~/Github/dotfiles/.tmux.conf ~/.tmux.conf
 
 | Keys      | Action                       |
 |-----------|------------------------------|
-| `C-a \|`  | Split horizontally (custom)  |
-| `C-a -`   | Split vertically (custom)    |
-| `C-a h`   | Move to pane left            |
-| `C-a j`   | Move to pane down            |
-| `C-a k`   | Move to pane up              |
-| `C-a l`   | Move to pane right           |
-| `C-a H`   | Resize pane left             |
-| `C-a J`   | Resize pane down             |
-| `C-a K`   | Resize pane up               |
-| `C-a L`   | Resize pane right            |
-| `C-a x`   | Kill current pane            |
-| `C-a z`   | Toggle pane zoom             |
-| `C-a {`   | Move pane left               |
-| `C-a }`   | Move pane right              |
+| `C-b \|`  | Split horizontally (custom)  |
+| `C-b -`   | Split vertically (custom)    |
+| `C-b h`   | Move to pane left            |
+| `C-b j`   | Move to pane down            |
+| `C-b k`   | Move to pane up              |
+| `C-b l`   | Move to pane right           |
+| `C-b H`   | Resize pane left             |
+| `C-b J`   | Resize pane down             |
+| `C-b K`   | Resize pane up               |
+| `C-b L`   | Resize pane right            |
+| `C-b x`   | Kill current pane            |
+| `C-b z`   | Toggle pane zoom             |
+| `C-b {`   | Move pane left               |
+| `C-b }`   | Move pane right              |
 
 ### Copy Mode (Scrollback)
 
 | Keys    | Action                         |
 |---------|--------------------------------|
-| `C-a [` | Enter copy mode                |
+| `C-b [` | Enter copy mode                |
 | `v`     | Begin selection (in copy mode) |
 | `y`     | Copy selection                 |
 | `q`     | Exit copy mode                 |
-| `C-a ]` | Paste buffer                   |
+| `C-b ]` | Paste buffer                   |
 
 **In copy mode:**
 - Use `h`, `j`, `k`, `l` for navigation (vim-style)
@@ -89,10 +89,10 @@ ln -sf ~/Github/dotfiles/.tmux.conf ~/.tmux.conf
 
 | Keys      | Action                       |
 |-----------|------------------------------|
-| `C-a ?`   | List all keybindings         |
-| `C-a :`   | Enter command mode           |
-| `C-a r`   | Reload config (custom)       |
-| `C-a t`   | Show clock                   |
+| `C-b ?`   | List all keybindings         |
+| `C-b :`   | Enter command mode           |
+| `C-b r`   | Reload config (custom)       |
+| `C-b t`   | Show clock                   |
 
 ## Common Workflows
 
@@ -105,7 +105,7 @@ tmux new -s work
 # Do some work...
 
 # Detach (keeps running in background)
-C-a d
+C-b d
 
 # Later, reattach
 tmux attach -t work
@@ -118,11 +118,11 @@ tmux attach -t work
 tmux new -s dev
 
 # Split into 3 panes
-C-a |     # Split vertical
-C-a -     # Split horizontal
+C-b |     # Split vertical
+C-b -     # Split horizontal
 
 # Navigate between panes
-C-a h/j/k/l
+C-b h/j/k/l
 
 # Run different things in each pane:
 # Pane 1: vim/emacs
@@ -135,10 +135,10 @@ C-a h/j/k/l
 ```bash
 # Create sessions for different projects
 tmux new -s project1
-C-a d
+C-b d
 
 tmux new -s project2
-C-a d
+C-b d
 
 # List all sessions
 tmux ls
@@ -159,7 +159,7 @@ Our config enables mouse support. You can:
 
 ### 2. Stay Organized
 - Name your sessions meaningfully: `tmux new -s web-dev`
-- Name your windows: `C-a ,` then type name
+- Name your windows: `C-b ,` then type name
 - Close unused panes/windows to reduce clutter
 
 ### 3. Persistent Sessions
@@ -221,7 +221,7 @@ set -g default-terminal "screen-256color"
 ### Config not loading
 ```bash
 # Reload config
-C-a r
+C-b r
 
 # Or restart tmux
 tmux kill-server
@@ -231,7 +231,7 @@ tmux
 ### Can't scroll
 ```bash
 # Enter copy mode first
-C-a [
+C-b [
 # Then use mouse wheel or j/k
 ```
 
@@ -246,7 +246,7 @@ git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 # Uncomment plugin lines in .tmux.conf
 
 # Install plugins
-C-a I
+C-b I
 ```
 
 **Useful plugins:**

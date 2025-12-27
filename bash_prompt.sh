@@ -11,7 +11,8 @@ YELLOW='\[\033[0;33m\]'
 RED='\[\033[0;31m\]'
 BOLD_CYAN='\[\033[1;36m\]'
 BOLD_GREEN='\[\033[1;32m\]'
-ITALIC_PASTEL_BLUE='\[\033[3;38;2;150;180;220m\]'
+ITALIC='\[\033[3m\]'
+PASTEL_BLUE='\[\033[38;2;150;180;220m\]'
 
 # Git branch in prompt (if in git repo)
 parse_git_branch() {
@@ -36,9 +37,9 @@ show_venv() {
 export VIRTUAL_ENV_DISABLE_PROMPT=1
 
 # Colorful prompt: (venv) [user@host dir] (git-branch)$
-# Colors: venv=italic pastel blue, user=bold mahogany, @=white, host=bold mahogany, dir=green, git=magenta
+# Colors: venv=italic pastel blue (no bg), user=bold mahogany, @=white, host=bold mahogany, dir=green, git=magenta
 BOLD_MAHOGANY='\[\033[1;38;2;165;42;42m\]'
-PS1="${ITALIC_PASTEL_BLUE}\$(show_venv)${RESET}${BOLD_MAHOGANY}\u${RESET}@${BOLD_MAHOGANY}\h${RESET} ${GREEN}\W${RESET}${MAGENTA}\$(parse_git_branch)${RESET}\$ "
+PS1="${ITALIC}${PASTEL_BLUE}\$(show_venv)${RESET}${BOLD_MAHOGANY}\u${RESET}@${BOLD_MAHOGANY}\h${RESET} ${GREEN}\W${RESET}${MAGENTA}\$(parse_git_branch)${RESET}\$ "
 
 # Alternative simpler prompt without git:
 # PS1="${CYAN}\u${RESET}@${BLUE}\h${RESET} ${GREEN}\W${RESET}\$ "

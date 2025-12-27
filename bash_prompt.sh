@@ -33,7 +33,7 @@ show_venv() {
     fi
 }
 
-# Disable default venv prompt (we'll handle it ourselves)
+# Disable default venv prompt
 export VIRTUAL_ENV_DISABLE_PROMPT=1
 
 # Colorful prompt: (venv) [user@host dir] (git-branch)$

@@ -1,5 +1,4 @@
 # Alacritty Configuration
-# Matches Emacs custom-dark theme with mellow lavender accents
 
 [env]
 TERM = "alacritty"
@@ -14,8 +13,8 @@ normal = { family = "monospace", style = "Regular" }
 size = 8.0
 
 [colors.primary]
-background = "#1c1c1c"  # Dark gray (matches Emacs bg)
-foreground = "#dddddd"  # Light gray (matches Emacs fg)
+background = "#1c1c1c"  # Dark gray
+foreground = "#dddddd"  # Light gray
 
 [colors.cursor]
 text = "#1c1c1c"
@@ -25,15 +24,15 @@ cursor = "#dddddd"
 text = "#dddddd"
 background = "#2c2c2c"  # Slightly lighter gray
 
-# Normal colors (lavender/pastel theme - matches Emacs)
+# Normal colors (lavender/pastel theme)
 [colors.normal]
 black   = "#1c1c1c"
 red     = "#e5a3c7"     # Rose pink
 green   = "#a8d5ba"     # Sage green
 yellow  = "#e8d5b7"     # Cream
-blue    = "#b8b0d0"     # Lavender blue (matches Emacs strings)
-magenta = "#d0c4e0"     # Mellow lavender (matches Emacs keywords)
-cyan    = "#c8bcd8"     # Soft lavender (matches Emacs builtins)
+blue    = "#b8b0d0"     # Lavender blue
+magenta = "#d0c4e0"     # Mellow lavender
+cyan    = "#c8bcd8"     # Soft lavender
 white   = "#dddddd"
 
 # Bright colors
@@ -42,9 +41,9 @@ black   = "#888888"     # Medium gray
 red     = "#f5b3d7"     # Bright rose
 green   = "#b8e5ca"     # Bright sage
 yellow  = "#f8e5c7"     # Bright cream
-blue    = "#c8c0d8"     # Bright lavender (matches Emacs types)
-magenta = "#e8e0f0"     # Very light lavender (matches Emacs funcs)
-cyan    = "#d8d0e8"     # Light lavender (matches Emacs vars)
+blue    = "#c8c0d8"     # Bright lavender
+magenta = "#e8e0f0"     # Very light lavender
+cyan    = "#d8d0e8"     # Light lavender
 white   = "#ffffff"
 
 [scrolling]

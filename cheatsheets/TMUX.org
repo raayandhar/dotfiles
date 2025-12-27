@@ -1,0 +1,56 @@
+#+TITLE: TMUX Cheatsheet
+#+OPTIONS: toc:1
+
+* Basics
+~tmux~ is a terminal multiplexer. The config is located in ~~/.tmux.conf~ and you use a soft link to install the config, i.e. ~ln -sf ~/Github/dotfiles/.tmux.conf ~/.tmux.conf~.
+There are a few basic ideas:
+- A *session* is a collection of windows
+- A *window* is a full screen view ("tab")
+- A *pane* is a section of a window
+The default prefix for all commands is ~C-b~. The config here enable mouse support to scroll and select text.
+* Keybindings
+** Session management
+- ~tmux~ starts a new session
+- ~tmux new -s <name>~ starts a named session (you will see the name in the bottom left)
+- ~tmux ls~ lists all sessions
+- ~tmux attach -t <name>~ attaches to a session
+- ~tmux kill-session -t <name>~ kills a specific session
+- ~tmux kill-server~ kills all sessions listed
+- ~C-b d~ detaches from the current session
+- ~C-b $~ renames the current session
+** Window Management
+- ~C-b c~ to create a new window
+- ~C-b ,~ to rename current window
+- ~C-b n~ to cycle to the next window
+- ~C-b p~ to cycle to the previous window
+- ~C-b l~ to jump to the last window
+- ~C-b w~ to list all windows
+- ~C-b &~ to kill current window
+- ~M-n~ to go to window n
+** Pane Management
+- ~C-b |~ to split horizontally
+- ~C-b -~ to split vertifcally
+- ~C-b h~ move to left pane
+- ~C-b j~ move to pane below
+- ~C-b k~ move to pane above
+- ~C-b l~ move to right pane
+- ~C-b X~ (where X is the capital of the four above) resize pane
+- ~C-b x~ kill current pane
+- ~C-b z~ toggle pane zoom
+- ~C-b {~ move pane left
+- ~C-b }~ move pane right
+** Copy / scroll mode
+- ~C-b [~ to to enter copy mode
+- ~v~ to begin selection
+- ~y~ to copy selection
+- ~q~ to exit copy mode
+- ~C-b ]~ to paste buffer
+- In copy mode:
+  - Use ~h~, ~j~, ~k~, ~l~ for navigation
+  - Use ~/~ to search
+  - Use ~C-u~ or ~C-d~ for page up / down
+** Misc.
+- ~C-b ?~ to list all keybindings
+- ~C-b :~ to enter command mode
+- ~C-b r~ to reload config
+- ~C-b~ to show clock

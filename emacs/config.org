@@ -256,11 +256,31 @@
         (indent "2em")
         (tags "ams")))
 ;; org-roam: Zettelkasten note-taking system with backlinks
-;; TODO: learn how to use this!
+;; Configured for hierarchical folder organization with transclusion
 (use-package org-roam
   :custom
-  (org-roam-directory "~/Github/rivendell")  ;; Change this to your preferred location
+  (org-roam-directory "~/Github/rivendell")
   (org-roam-completion-everywhere t)
+
+  ;; Custom capture templates for folder-based organization
+  (org-roam-capture-templates
+   '(("d" "default" plain "%?"
+      :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                         "#+title: ${title}\n")
+      :unnarrowed t)
+
+     ("a" "atomic note" plain
+      "* Summary\n\n%?\n\n* Details\n\n* Related\n"
+      :target (file+head "${subject}/${topic}/${slug}.org"
+                         "#+title: ${title}\n#+filetags: :${subject}:${topic}:\n")
+      :unnarrowed t)
+
+     ("l" "long-running note" plain
+      "* Overview\n\n%?\n\n* Embedded Topics\n\n"
+      :target (file+head "${subject}/${topic}/long-running-${slug}.org"
+                         "#+title: ${title}\n#+filetags: :${subject}:${topic}:longrunning:\n")
+      :unnarrowed t)))
+
   :bind (("C-c n f" . org-roam-node-find)          ;; Find or create note
          ("C-c n i" . org-roam-node-insert)        ;; Insert link to note
          ("C-c n l" . org-roam-buffer-toggle)      ;; Toggle backlinks
@@ -278,6 +298,17 @@
   (org-roam-ui-sync-theme t)
   (org-roam-ui-follow t)
   (org-roam-ui-update-on-save t))
+
+;; org-transclusion: Embed content from other org files dynamically
+;; Use #+transclude: [[file:path.org]] to embed content
+;; Enable with: M-x org-transclusion-mode or C-c n t
+(use-package org-transclusion
+  :after org
+  :bind (("C-c n t" . org-transclusion-add)           ;; Add transclusion at point
+         ("C-c n T" . org-transclusion-mode)          ;; Toggle transclusion mode
+         ("C-c n e" . org-transclusion-make-from-link)) ;; Make transclusion from link
+  :custom
+  (org-transclusion-exclude-elements nil))
 #+end_src
 
 * LATEX

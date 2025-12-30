@@ -1,0 +1,70 @@
+#+TITLE: ORG Mode and ORG Roam Cheatsheet
+#+OPTIONS: toc: 1
+
+* Org-Roam Setup
+The general approach is the following:
+- Have *hierarchical folders* that go from subject -> topic -> notes (for organization)
+- Keep *atomic notes* at this lowest level
+- Within a topic, have a *long-running note(s)* the aggregate these atomic notes using org-transclusion
+- Edit these atomic notes and embed them everywhere, we can embed them in multiple, seperate long-runng notes
+- We can further a distinguish a topic by adding a ~-<sub-topic>~, e.g. ~transformers-theory~ and ~transformers-systems~
+Here's an example of what this may end up looking like:
+#+begin_src 
+~/Github/rivendell/
+├── deep-learning/
+│   ├── transformers/
+│   │   ├── long-running-transformers.org
+│   │   ├── tokenization.org             
+│   │   ├── gqa.org                      
+│   │   ├── attention.org                
+│   │   └── positional-encoding.org      
+│   └── cnns/
+│       ├── long-running-cnns.org
+│       └── convolution.org
+├── computer-architecture/
+│   ├── caches/
+│   │   ├── long-running-caches.org
+│   │   └── cache-coherence.org
+│   └── pipelines/
+└── mathematics/
+    └── linear-algebra/
+#+end_src
+There are three types of notes that we can create:
+1. Default notes, via ~C-c n f~ -> ~d~ (default template) which are created at the root of the directory
+2. Atomic notes, via ~C-c n f~ -> ~a~ (atomic template). It has some prompts:
+   - ~subject~: i.e. "deep learning"
+   - ~topic~: i.e. "transformers"
+   - ~title~: i.e. "tokenization"
+   It will prompt you to create these folders if they don't exist, and we will have ~deep-learning/transformers/tokenization.org~. The template will have a tag like ~#+filetags: :deep-learning:transformers:~.
+3. Long-running notes, via ~C-c n f~ -> ~l~ (long-running template), with the same prompts as atomic notes. However, the file tag will be different, i.e. ~#+filetags: :deep-learning:transformers:longrunning:~.
+To embed other notes we can use
+- roam, i.e. ~{{roam:Embeddings}}~ (replace curly braces with square braces). This will setup a backlink.
+- transclusion, i.e. ~+transclude: {{file:tokenization.org}} :level 3~. This will embed the note directly. To activate the transclusion, use ~M-x org-transclusion-mode~ or ~C-c n T~. When we update an atomic note, it updates everywhere it's transcluded.
+  We had ~:level 3~ to have heading level, we can translcude special sections by doing something like ~{{file:tokenization.org::*Details}}~ which will only embed the "Details" heading.
+  We can also transclude by ID: ~{{id:node-id-here}}~. The ~file:~ is just a path, so we can include from other long-running notes, for example ~file:../transformers/tokenization.org~.
+Org-roam keybindings:
+#+begin_src
+| Keybinding | Command                  | Description                    |
+|------------|--------------------------|--------------------------------|
+| `C-c n f`  | org-roam-node-find       | Find or create note            |
+| `C-c n i`  | org-roam-node-insert     | Insert link to note            |
+| `C-c n l`  | org-roam-buffer-toggle   | Toggle backlinks sidebar       |
+| `C-c n d`  | org-roam-dailies-today   | Go to today's daily note       |
+| `C-c n c`  | org-roam-capture         | Capture new note               |
+#+end_src
+Org-transclusion keybindings:
+#+begin_src 
+| Keybinding | Command                         | Description                    |
+|------------|---------------------------------|--------------------------------|
+| `C-c n t`  | org-transclusion-add            | Add transclusion at point      |
+| `C-c n T`  | org-transclusion-mode           | Toggle transclusion mode       |
+| `C-c n e`  | org-transclusion-make-from-link | Convert link to transclusion   |
+#+end_src
+Within transclusion mode:
+- `C-c n t` - Add/update all transclusions
+- Navigate to transcluded content and edit directly
+- `C-c C-o` - Open source file
+You can always export notes with ~C-c C-e~ (options will pop up). Run ~C-c n l~ to see backlinks and to open a visual graph, run ~M-x org-roam-ui-node~.
+
+* Org-Mode Setup
+TODO.

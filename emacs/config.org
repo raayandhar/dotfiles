@@ -6,7 +6,6 @@
 * PACKAGE MANAGEMENT
 #+begin_src emacs-lisp
   ;; straight.el is bootstrapped in init.el (before this file loads)
-  ;; This ensures org version consistency
 
   ;; Install use-package via straight
   (straight-use-package 'use-package)
@@ -452,55 +451,55 @@
 
 * C++/CUDA DEVELOPMENT
 #+begin_src emacs-lisp
-(use-package lsp-mode
-  :hook ((c-ts-mode . my/lsp-deferred-if-local)
-         (c++-ts-mode . my/lsp-deferred-if-local)
-         (cuda-ts-mode . my/lsp-deferred-if-local))
-  :custom
-  (lsp-clients-clangd-executable "clangd")
-  :config
-  ;; Configure CUDA mode to use clangd as C++
-  (add-to-list 'lsp-language-id-configuration '(cuda-ts-mode . "cpp"))
+  (use-package lsp-mode
+    :hook ((c-ts-mode . my/lsp-deferred-if-local)
+           (c++-ts-mode . my/lsp-deferred-if-local)
+           (cuda-ts-mode . my/lsp-deferred-if-local))
+    :custom
+    (lsp-clients-clangd-executable "clangd")
+    :config
+    ;; Configure CUDA mode to use clangd as C++
+    (add-to-list 'lsp-language-id-configuration '(cuda-ts-mode . "cpp"))
 
-  (with-eval-after-load 'lsp-mode
-    (lsp-register-client
-     (make-lsp-client
-      :new-connection (lsp-stdio-connection "clangd")
-      :activation-fn (lsp-activate-on "cpp")
-      :major-modes '(cuda-ts-mode)
-      :server-id 'clangd-cuda))))
+    (with-eval-after-load 'lsp-mode
+      (lsp-register-client
+       (make-lsp-client
+        :new-connection (lsp-stdio-connection "clangd")
+        :activation-fn (lsp-activate-on "cpp")
+        :major-modes '(cuda-ts-mode)
+        :server-id 'clangd-cuda))))
 
-;; clang-format: Code formatting
-(use-package clang-format
-  :bind (("C-c C-f" . clang-format-buffer)      ;; Format whole buffer
-         ("C-c C-r" . clang-format-region)))    ;; Format region
-;; Note: NOT auto-formatting on save to avoid indentation issues
-;; Use C-c C-f to manually format when needed
+  ;; clang-format: Code formatting
+  (use-package clang-format
+    :bind (("C-c C-f" . clang-format-buffer)      ;; Format whole buffer
+           ("C-c C-r" . clang-format-region)))    ;; Format region
+  ;; Note: NOT auto-formatting on save to avoid indentation issues
+  ;; Use C-c C-f to manually format when needed
 
-;; CUDA keyword highlighting
-(with-eval-after-load 'cuda-ts-mode
-  (font-lock-add-keywords 'cuda-ts-mode
-    '(("__global__"   . font-lock-keyword-face)
-      ("__device__"   . font-lock-keyword-face)
-      ("__host__"     . font-lock-keyword-face)
-      ("__shared__"   . font-lock-keyword-face)
-      ("__constant__" . font-lock-keyword-face)
-      ("__syncthreads" . font-lock-builtin-face)
-      ("blockIdx" . font-lock-builtin-face)
-      ("threadIdx" . font-lock-builtin-face)
-      ("blockDim" . font-lock-builtin-face)
-      ("gridDim" . font-lock-builtin-face))))
+  ;; CUDA keyword highlighting
+  (with-eval-after-load 'cuda-ts-mode
+    (font-lock-add-keywords 'cuda-ts-mode
+      '(("__global__"   . font-lock-keyword-face)
+        ("__device__"   . font-lock-keyword-face)
+        ("__host__"     . font-lock-keyword-face)
+        ("__shared__"   . font-lock-keyword-face)
+        ("__constant__" . font-lock-keyword-face)
+        ("__syncthreads" . font-lock-builtin-face)
+        ("blockIdx" . font-lock-builtin-face)
+        ("threadIdx" . font-lock-builtin-face)
+        ("blockDim" . font-lock-builtin-face)
+        ("gridDim" . font-lock-builtin-face))))
 
-;; CUDA setup hook
-(defun my/cuda-setup ()
-  "Setup function for CUDA mode."
-  (setq-local indent-tabs-mode nil)
-  ;; Disable some LSP features that can be noisy in CUDA
-  (setq-local lsp-completion-enable-additional-text-edit nil
-              lsp-eldoc-enable-hover t
-              lsp-signature-auto-activate t))
+  ;; CUDA setup hook
+  (defun my/cuda-setup ()
+    "Setup function for CUDA mode."
+    (setq-local indent-tabs-mode nil)
+    ;; Disable some LSP features that can be noisy in CUDA
+    (setq-local lsp-completion-enable-additional-text-edit nil
+                lsp-eldoc-enable-hover t
+                lsp-signature-auto-activate t))
 
-(add-hook 'cuda-ts-mode-hook #'my/cuda-setup)
+  (add-hook 'cuda-ts-mode-hook #'my/cuda-setup)
 #+end_src
 
 * KEYBINDINGS

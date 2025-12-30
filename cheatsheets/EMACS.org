@@ -74,60 +74,6 @@
 | C-;     | embark-dwim          | Smart default action               |
 | C-h B   | embark-bindings      | Show all available keybindings     |
 
-* Recent Files
-
-** How it works
-- Automatically tracks last 100 files you open
-- Persists across Emacs sessions
-- Shows up to 25 files in completion list
-
-** Access recent files
-: C-x C-r (consult-recent-file)
-
-* Appearance & Theme
-
-** Custom dark theme
-- Location: ~/.emacs.d/themes/custom-dark-theme.el
-- Muted monochrome syntax highlighting
-- Grays and whites for minimal distraction
-
-** Color scheme
-- Background: #1c1c1c (very dark gray)
-- Foreground: #dddddd (light gray)
-- Comments: #888888 (medium gray, italic)
-- Keywords: #cccccc (light gray)
-- Functions: #ffffff (white, brightest)
-
-** diff-hl colors (git indicators)
-- Green (#50a050): Added lines
-- Blue (#5080b0): Modified lines
-- Red (#d05050): Deleted lines
-
-** UI settings
-- No menu bar, toolbar, or scrollbars
-- Line numbers enabled globally
-- 95% window transparency
-- 10pt font (height 100)
-
-* TRAMP (SSH Support)
-
-** Editing remote files
-: C-x C-f /ssh:user@host:/path/to/file
-
-** Examples
-: /ssh:raayan@server.com:/home/raayan/code/main.py
-: /ssh:root@192.168.1.100:/etc/nginx/nginx.conf
-
-** What works over SSH
-- File editing (obviously)
-- Magit (git operations on remote!)
-- LSP (may be slower)
-- Directory browsing (dired)
-- Most text editing features
-
-** What doesn't work over SSH
-- vterm (local terminal only)
-
 * Git Integration
 
 ** Magit - Git Interface
@@ -225,12 +171,6 @@
 - Buffer modified indicator
 
 * Org Mode
-
-** Basic settings
-- Indented content under headings
-- RET follows links
-- org-tempo enabled for quick templates
-
 ** org-tempo quick templates
 | Type      | Press TAB | Result                    |
 |-----------+-----------+---------------------------|
@@ -238,87 +178,6 @@
 | <e        | TAB       | #+begin_example ...       |
 | <q        | TAB       | #+begin_quote ...         |
 | <c        | TAB       | #+begin_center ...        |
-
-** org-bullets
-- Pretty bullets (●, ○, ✸) instead of asterisks
-- Auto-enabled in org-mode
-
-** toc-org
-- Auto-generate table of contents
-- Add :TOC: tag to heading where you want TOC
-
-** org-fragtog
-- Live LaTeX preview in org files
-- Type $E=mc^2$ and see it rendered!
-- Auto-enabled in org-mode
-
-** org-roam - Zettelkasten Note-Taking
-| Key       | Command                        | Description                    |
-|-----------+--------------------------------+--------------------------------|
-| C-c n f   | org-roam-node-find             | Find or create note            |
-| C-c n i   | org-roam-node-insert           | Insert link to note            |
-| C-c n l   | org-roam-buffer-toggle         | Toggle backlinks sidebar       |
-| C-c n d   | org-roam-dailies-goto-today    | Go to today's daily note       |
-| C-c n c   | org-roam-capture               | Capture new note               |
-
-** org-roam workflow
-1. C-c n f → create/find note
-2. Type note title → RET
-3. Write your note
-4. C-x C-s → save
-5. C-c n i → link to other notes
-6. C-c n l → see backlinks
-
-** org-roam-ui
-- Visual graph interface
-- Access with: M-x org-roam-ui-mode
-- Opens in browser
-- Shows connections between notes
-
-** Notes location
-- Stored in: ~/Github/rivendell/
-
-* LaTeX
-
-** AUCTeX features
-- Enhanced LaTeX editing
-- Syntax highlighting
-- Auto-completion
-- Smart indentation
-- Uses latexmk (handles multiple passes automatically)
-
-** Compilation
-| Key       | Command                | Description                     |
-|-----------+------------------------+---------------------------------|
-| C-c C-c   | TeX-command-master     | Compile (choose LatexMk first)  |
-| RET       | TeX-view               | View PDF                        |
-
-** Workflow
-1. Write LaTeX in .tex file
-2. C-c C-c → choose "LatexMk" → RET
-3. RET → PDF opens in split window
-4. Make changes → C-c C-c → PDF auto-refreshes
-5. Click in PDF → jumps to source line!
-
-** pdf-tools features
-- View PDFs inside Emacs
-- SyncTeX: Click in PDF ↔ source
-- Auto-refresh on recompile
-- No line numbers in PDF view
-
-** pdf-tools navigation
-| Key     | Action                    |
-|---------|---------------------------|
-| n       | Next page                 |
-| p       | Previous page             |
-| +       | Zoom in                   |
-| -       | Zoom out                  |
-| 0       | Reset zoom                |
-| g       | Go to page                |
-| o       | Outline/table of contents |
-
-** Requirements
-- latexmk installed (texlive-binextra package)
 
 * Development Tools
 

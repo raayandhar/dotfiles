@@ -2,6 +2,8 @@
 
 [env]
 TERM = "alacritty"
+TERM_PROGRAM = "Alacritty"
+TERM_PROGRAM_VERSION = "0.13"
 
 [window]
 opacity = 0.95
@@ -9,8 +11,12 @@ padding = { x = 10, y = 10 }
 decorations = "full"
 
 [font]
-normal = { family = "monospace", style = "Regular" }
-size = 8.0
+# macOS: Try "SF Mono", "Menlo", or "Monaco" for system fonts
+# Or install: "JetBrains Mono", "Fira Code", "Source Code Pro"
+normal = { family = "Menlo", style = "Regular" }
+bold   = { family = "Menlo", style = "Bold" }
+italic = { family = "Menlo", style = "Italic" }
+size = 12.0  # Adjusted size for macOS
 
 [colors.primary]
 background = "#1c1c1c"  # Dark gray

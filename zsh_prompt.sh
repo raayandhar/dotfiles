@@ -16,13 +16,13 @@ if [[ "$TERM_PROGRAM" == "Apple_Terminal" ]] || [[ "$TERM" != *"256color"* && "$
     COLOR_RESET='%f%b'
 else
     # Modern terminals (Alacritty, iTerm2, etc) - use RGB colors
-    VENV_COLOR=$'\e[3;38;2;150;180;220m'  # Italic pastel blue
-    USER_COLOR=$'\e[1;38;2;165;42;42m'    # Bold mahogany
+    VENV_COLOR='%{'$'\e[3;38;2;150;180;220m''%}'  # Italic pastel blue
+    USER_COLOR='%{'$'\e[1;38;2;165;42;42m''%}'    # Bold mahogany
     DIR_COLOR='%F{green}'
     GIT_COLOR='%F{magenta}'
     RESET='%f%b'
-    ITALIC=$'\e[3m'
-    COLOR_RESET=$'\e[0m'
+    ITALIC='%{'$'\e[3m''%}'
+    COLOR_RESET='%{'$'\e[0m''%}'
 fi
 
 # Git branch in prompt (if in git repo)

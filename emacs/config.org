@@ -16,6 +16,9 @@
 
 * TREE-SITTER
 #+begin_src emacs-lisp
+;; Ensure native architecture compilation (ARM64 on Apple Silicon)
+(setq treesit-extra-load-path (list (expand-file-name "tree-sitter" user-emacs-directory)))
+
 ;; Register grammar sources
 (setq treesit-language-source-alist
       '((python "https://github.com/tree-sitter/tree-sitter-python")
@@ -25,13 +28,16 @@
 
 ;; Run: M-x install-treesit-grammars
 (defun install-treesit-grammars ()
-  "Install all tree-sitter grammars defined in treesit-language-source-alist."
+  "Install all tree-sitter grammars defined in treesit-language-source-alist.
+Ensures compilation with native architecture (no Rosetta x86_64)."
   (interactive)
-  (dolist (lang treesit-language-source-alist)
-    (let ((lang-name (car lang)))
-      (unless (treesit-language-available-p lang-name)
-        (message "Installing tree-sitter grammar for %s..." lang-name)
-        (treesit-install-language-grammar lang-name)))))
+  ;; Set CC to use native clang without Rosetta
+  (let ((process-environment (cons "CC=clang" process-environment)))
+    (dolist (lang treesit-language-source-alist)
+      (let ((lang-name (car lang)))
+        (unless (treesit-language-available-p lang-name)
+          (message "Installing tree-sitter grammar for %s..." lang-name)
+          (treesit-install-language-grammar lang-name))))))
 
 ;; Use tree-sitter modes for Python and C++
 (add-to-list 'auto-mode-alist '("\\.py\\'" . python-ts-mode))
@@ -126,8 +132,8 @@
 (menu-bar-mode -1)    ;; Remove the menu bar (File, Edit, Options, etc.)
 (tool-bar-mode -1)    ;; Remove the toolbar with icons
 (scroll-bar-mode -1)  ;; Remove the scroll bars
-;; Font configuration (height 80 = 80% of default size)
-(set-face-attribute 'default nil :height 80)
+;; Font configuration (height 120 = 120% of default size, good for macOS)
+(set-face-attribute 'default nil :height 120)
 ;; Line and column numbers in the margin
 (global-display-line-numbers-mode 1)  ;; Show line numbers in all buffers
 (setq display-line-numbers-type t)    ;; Use absolute line numbers (not relative)
